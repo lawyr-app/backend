@@ -1,0 +1,45 @@
+const regions = [
+  { name: "Andaman and Nicobar Islands", id: 2454 },
+  { name: "Andhra Pradesh", id: 2486 },
+  { name: "Arunachal Pradesh", id: 2487 },
+  { name: "Assam", id: 2513 },
+  { name: "Bihar", id: 2488 },
+  { name: "Chandigarh", id: 2489 },
+  { name: "Chhattisgarh", id: 2490 },
+  { name: "Dadra and Nagar Haveli and Daman and Diu", id: 2492 },
+  { name: "Delhi", id: 2493 },
+  { name: "Goa", id: 2514 },
+  { name: "Gujarat", id: 2455 },
+  { name: "Haryana", id: 2193 },
+  { name: "Himachal Pradesh", id: 2494 },
+  { name: "Jammu and Kashmir", id: 2495 },
+  { name: "Jharkhand", id: 2515 },
+  { name: "Karnataka", id: 2485 },
+  { name: "Kerala", id: 2516 },
+  { name: "Ladakh", id: 14011 },
+  { name: "Madhya Pradesh", id: 2497 },
+  { name: "Maharashtra", id: 2517 },
+  { name: "Manipur", id: 2498 },
+  { name: "Meghalaya", id: 2499 },
+  { name: "Mizoram", id: 2500 },
+  { name: "Nagaland", id: 2501 },
+  { name: "Odisha", id: 2502 },
+  { name: "Puducherry", id: 2503 },
+  { name: "Punjab", id: 2504 },
+  { name: "Rajasthan", id: 2505 },
+  { name: "Sikkim", id: 2506 },
+  { name: "Tamil Nadu", id: 2507 },
+  { name: "Telangana", id: 2508 },
+  { name: "Tripura", id: 2509 },
+  { name: "Uttarakhand", id: 2511 },
+  { name: "Uttar Pradesh", id: 2510 },
+  { name: "West Bengal", id: 2512 },
+  { name: "Lakshadweep", id: 2496 },
+  { name: "India", id: 1362 },
+];
+
+const websiteUrl = "https://www.indiacode.nic.in/handle/123456789";
+
+const baseUrl = `${websiteUrl}/#ID/browse?type=shorttitle&sort_by=3&order=ASC&rpp=#LIMIT&etal=-1&null=&offset=0`;
+
+export { regions, baseUrl, websiteUrl };
