@@ -1,9 +1,11 @@
 import { fastify } from "fastify";
-import mongoose from "mongoose";
 import registerRoutes from "./route";
+import { connectDB } from "./utils/connectDb";
+
+require("dotenv").config();
 
 const PORT = process.env.PORT || 7000;
-const MONGODB = process.env.MONGODB;
+const MONGODB = process.env.MONGODB!;
 
 const server = fastify({
   logger: true,
@@ -11,13 +13,20 @@ const server = fastify({
 
 registerRoutes(server);
 
-const start = async () => {
-  try {
-    await server.listen({ port: +PORT });
-    console.log("Server started successfully");
-  } catch (err) {
-    server.log.error(err);
-    process.exit(1);
-  }
-};
-start();
+connectDB({
+  onSuccess: () => {
+    server
+      .listen({
+        port: 8000,
+        host: "0.0.0.0",
+      })
+      .then((res) => {
+        console.log(`server running at ${res}`);
+      })
+      .catch((err) => {
+        console.log(`server couldnt run on ${PORT} due to ${err}`);
+        process.exit(1);
+      });
+  },
+  mogoUrl: MONGODB,
+});

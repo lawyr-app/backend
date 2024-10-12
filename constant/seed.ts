@@ -1,4 +1,5 @@
 const regions = [
+  { name: "Lakshadweep", id: 2496 },
   { name: "Andaman and Nicobar Islands", id: 2454 },
   { name: "Andhra Pradesh", id: 2486 },
   { name: "Arunachal Pradesh", id: 2487 },
@@ -34,7 +35,6 @@ const regions = [
   { name: "Uttarakhand", id: 2511 },
   { name: "Uttar Pradesh", id: 2510 },
   { name: "West Bengal", id: 2512 },
-  { name: "Lakshadweep", id: 2496 },
   { name: "India", id: 1362 },
 ];
 

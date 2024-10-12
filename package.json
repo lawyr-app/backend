@@ -19,6 +19,7 @@
   "dependencies": {
     "dotenv": "^16.4.5",
     "fastify": "^5.0.0",
-    "mongoose": "^8.7.1"
+    "mongoose": "^8.7.1",
+    "puppeteer": "^23.5.3"
   }
 }

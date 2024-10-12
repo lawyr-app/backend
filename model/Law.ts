@@ -4,20 +4,20 @@ const { ObjectId } = Schema.Types;
 const lawSchema = new Schema(
   {
     websiteUrl: String,
-    actDate: Date,
-    actNumber: Date,
+    actDate: String,
+    actNumber: String,
     shortTitle: String,
-    pdfs: [
-      {
-        title: String,
-        pdfUrl: String,
-      },
-    ],
+    pdfUrl: String,
     isTrained: {
       type: Boolean,
       default: false,
     },
     error: String,
+    uniqueId: String,
+    regionId: {
+      type: ObjectId,
+      ref: "Region",
+    },
   },
   { timestamps: true }
 );
