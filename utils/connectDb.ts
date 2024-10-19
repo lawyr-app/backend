@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-require("dotenv").config();
+import { MONGODB_URL } from "../constant/envvariables";
 
 type connectDBProps = {
   onSuccess?: () => void;
@@ -9,7 +9,7 @@ type connectDBProps = {
 
 export const connectDB = ({
   onSuccess,
-  mogoUrl = process.env.MONGODB,
+  mogoUrl = MONGODB_URL!,
   onError,
 }: connectDBProps) => {
   mongoose
