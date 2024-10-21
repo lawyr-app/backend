@@ -5,6 +5,12 @@ import puppeteer from "puppeteer";
 import { fetchAndParsePDF } from "../utils/fetchAndParsePdf";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { generateEmbeddings } from "../utils/generateEmbedding";
+import { constitutionData } from "../constant/constitutionData";
+import pdf from "pdf-parse";
+import { EmbeddingModel } from "../model/Embedding";
+import { MONGODB_URL } from "../constant/envvariables";
+import { MongoClient } from "mongodb";
+import { addDataToPineCone } from "../services/PineConeService";
 
 const handleSeedRegions = async () => {
   try {
@@ -141,34 +147,107 @@ const generateAndSaveEmbeddings = async () => {
 
     for (const law of laws) {
       try {
-        const content = await fetchAndParsePDF({ url: law.pdfUrl! });
-        // if (content) {
-        //   console.log("content", content);
-        //   const textSplitter = new RecursiveCharacterTextSplitter({
-        //     chunkSize: 2000,
-        //     chunkOverlap: 500,
-        //   });
-        //   const chunks = await textSplitter.splitText(content);
-        //   console.log("chunks", chunks);
+        if (law.shortTitle === "Constitution") {
+          const oldEmbeddings = await EmbeddingModel.find({
+            lawId: law._id,
+            regionId: law.regionId,
+          });
+          for (let emb of oldEmbeddings) {
+            const vectorIds = [];
+            let index = 1;
+            for (let vec of emb.vector) {
+              const newPineId = `${emb._id}-${index}`;
+              console.log({ vec, newPineId });
+              await addDataToPineCone({
+                id: newPineId,
+                embeddings: vec,
+                namespace: "India",
+                lawId: emb.lawId,
+                part: emb.part,
+                embeddingId: emb._id,
+                regionId: emb.regionId,
+              });
+              index = index + 1;
+              vectorIds.push(newPineId);
+            }
+            emb.pineconeIds = vectorIds;
+            await emb.save();
+          }
+          // const oldEmbeddings = await EmbeddingModel.find({
+          //   lawId: law._id,
+          //   regionId: law.regionId,
+          //   embedding: [],
+          // });
+          // for (const emb of oldEmbeddings) {
+          //   if (emb.embedding.length === 0 && emb.content) {
+          //     const textSplitter = new RecursiveCharacterTextSplitter({
+          //       chunkSize: 2000,
+          //       chunkOverlap: 500,
+          //     });
+          //     const chunks = await textSplitter.splitText(emb.content);
+          //     const documentRes = await generateEmbeddings(chunks);
+          //     emb.embedding = documentRes;
+          //     await emb.save();
+          //   }
+          // }
+          // console.log("oldEmbeddings", oldEmbeddings);
+          // for (const trimmedPdf of constitutionData) {
+          //   const content = await fetchAndParsePDF({
+          //     url: trimmedPdf.location,
+          //     isLocal: true,
+          //   });
+          //   if (content) {
+          //     const textSplitter = new RecursiveCharacterTextSplitter({
+          //       chunkSize: 2000,
+          //       chunkOverlap: 500,
+          //     });
+          //     const chunks = await textSplitter.splitText(content);
+          //     const documentRes = await generateEmbeddings(chunks);
+          //     const embeddingModel = new EmbeddingModel({
+          //       content,
+          //       part: trimmedPdf.id,
+          //       embeddings: documentRes.flat(),
+          //       lawId: law._id,
+          //       regionId: law.regionId,
+          //     });
+          //     await embeddingModel.save();
+          //   } else {
+          //     console.log("Failed", trimmedPdf.id);
+          //   }
+          // }
+        } else {
+          const content = await fetchAndParsePDF({
+            url: law.pdfUrl!,
+            isLocal: false,
+          });
+          if (content) {
+            console.log("content", content);
+            const textSplitter = new RecursiveCharacterTextSplitter({
+              chunkSize: 2000,
+              chunkOverlap: 500,
+            });
+            const chunks = await textSplitter.splitText(content);
+            console.log("chunks", chunks);
 
-        //   const documentRes = await generateEmbeddings(chunks);
-        //   // const documentRes = await model.embedDocuments(chunks);
-        //   law.content = content;
-        //   law.embeddings = documentRes;
-        //   law.isTrained = true;
-        //   law.error = "";
-        //   await law.save();
-        //   console.log("completed", law.shortTitle);
-        // } else {
-        //   console.log("did not completed", law.shortTitle);
-        // }
+            const documentRes = await generateEmbeddings(chunks);
+            // const documentRes = await model.embedDocuments(chunks);
+            law.content = content;
+            law.embeddings = documentRes;
+            law.isTrained = true;
+            law.error = "";
+            await law.save();
+            console.log("completed", law.shortTitle);
+          } else {
+            console.log("did not completed", law.shortTitle);
+          }
+        }
       } catch (error) {
         console.log("Failed", law.shortTitle);
         console.error(`Error processing ${law.shortTitle}:`, error);
-        law.isTrained = true;
-        law.embeddings = [];
-        law.error = "FAILED_TO_SAVE_EMBEDDINGS";
-        await law.save();
+        // law.isTrained = true;
+        // law.embeddings = [];
+        // law.error = "FAILED_TO_SAVE_EMBEDDINGS";
+        // await law.save();
       }
     }
   } catch (error) {

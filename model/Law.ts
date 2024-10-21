@@ -18,6 +18,12 @@ const lawSchema = new Schema(
       type: ObjectId,
       ref: "Region",
     },
+    embeddingsId: [
+      {
+        type: ObjectId,
+        ref: "Embedding",
+      },
+    ],
   },
   { timestamps: true }
 );
