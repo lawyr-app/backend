@@ -1,6 +1,7 @@
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { EmbeddingModel } from "../model/Embedding";
 import { getDataFromPineCone } from "../services/PineConeService";
+import { QueryResponse, RecordMetadata } from "@pinecone-database/pinecone";
 
 type commonProps = {
   questionEmbedding: [number];
@@ -12,12 +13,22 @@ const getEmbeddingIds = async ({
   nameSpace = "India",
 }: commonProps) => {
   try {
-    const results = await getDataFromPineCone({
-      embeddings: questionEmbedding,
-      namespace: nameSpace,
-    });
-    const embeddingIds = results.matches.map((m) => m.metadata.embeddingId);
-    return embeddingIds[0] ?? [];
+    const results: QueryResponse<RecordMetadata> | never[] =
+      await getDataFromPineCone({
+        embeddings: questionEmbedding,
+        namespace: nameSpace,
+      });
+    if (results && "matches" in results && results.matches.length > 0) {
+      const embeddingIds = results.matches.map((m) => {
+        const id = m?.metadata?.embeddingId;
+        if (id) {
+          return id;
+        }
+      });
+      return embeddingIds[0] ?? [];
+    }
+
+    return [];
   } catch (error) {
     console.error(`Something went wrong in getEmbeddingIds due to `, error);
     return [];
