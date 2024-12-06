@@ -1,4 +1,5 @@
 import { Schema, model } from "mongoose";
+import { MODELS_TYPE } from "../constant/models";
 
 const regionsSchema = new Schema(
   {
@@ -9,4 +10,4 @@ const regionsSchema = new Schema(
   { timestamps: true }
 );
 
-export const RegionsModel = model("Region", regionsSchema);
+export const RegionsModel = model(MODELS_TYPE.Region, regionsSchema);

@@ -1,4 +1,5 @@
 import { Schema, model } from "mongoose";
+import { MODELS_TYPE } from "../constant/models";
 const { ObjectId } = Schema.Types;
 
 const lawSchema = new Schema(
@@ -28,4 +29,4 @@ const lawSchema = new Schema(
   { timestamps: true }
 );
 
-export const LawModel = model("Law", lawSchema);
+export const LawModel = model(MODELS_TYPE.Law, lawSchema);

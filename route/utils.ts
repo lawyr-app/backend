@@ -4,7 +4,6 @@ import {
   FastifyPluginCallback,
 } from "fastify";
 import {
-  createSerachIndexes,
   generateAndSaveEmbeddings,
   handleSeedRegions,
   scrapAndStoreActUrls,

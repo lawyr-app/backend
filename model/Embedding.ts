@@ -1,4 +1,5 @@
 import { Schema, model } from "mongoose";
+import { MODELS_TYPE } from "../constant/models";
 const { ObjectId } = Schema.Types;
 
 const embeddingSchema = new Schema(
@@ -20,4 +21,4 @@ const embeddingSchema = new Schema(
   { timestamps: true }
 );
 
-export const EmbeddingModel = model("Embedding", embeddingSchema);
+export const EmbeddingModel = model(MODELS_TYPE.Embedding, embeddingSchema);

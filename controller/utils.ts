@@ -8,8 +8,6 @@ import { generateEmbeddings } from "../utils/generateEmbedding";
 import { constitutionData } from "../constant/constitutionData";
 import pdf from "pdf-parse";
 import { EmbeddingModel } from "../model/Embedding";
-import { MONGODB_URL } from "../constant/envvariables";
-import { MongoClient } from "mongodb";
 import { addDataToPineCone } from "../services/PineConeService";
 
 const handleSeedRegions = async () => {
