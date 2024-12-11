@@ -1,14 +1,13 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { ChatGroq } from "@langchain/groq";
-import { generateEmbeddings } from "../utils/generateEmbedding";
-import { StringOutputParser } from "@langchain/core/output_parsers";
-import { GROQ_API_KEY } from "../constant/envvariables";
 import { response } from "../utils/response";
-import { getChatContext, lawPromptTemplate } from "../utils/chatUtils";
+import { ChatModel } from "../model/Chat";
+import { MessageModel } from "../model/Message";
+import { CHAT_MESSAGES, INTERNAL_SERVER_ERROR } from "../constant/messages";
 
 type InitiateChatRequestType = FastifyRequest<{
   Body: {
     question: string;
+    chatId: string;
   };
 }>;
 const initiateChat = async (
@@ -16,52 +15,29 @@ const initiateChat = async (
   reply: FastifyReply
 ) => {
   try {
+    const { _id } = req.user;
     const { question } = req.body;
-    const questionEmbeddings = await generateEmbeddings(question);
-    const context = await getChatContext({
-      nameSpace: "India",
-      questionEmbedding: questionEmbeddings,
+    const savedChat = await ChatModel.create({
+      firstQuestion: question,
+      createdBy: _id,
     });
-    if (!context) {
-      return reply.send(
-        response({
-          data: "No context found",
-          isError: false,
-        })
-      );
-    }
-
-    const llm = new ChatGroq({
-      apiKey: GROQ_API_KEY,
-      model: "llama-3.1-8b-instant",
-      streaming: true,
-    });
-
-    const answer = await lawPromptTemplate
-      .pipe(llm)
-      .pipe(new StringOutputParser())
-      .invoke({
-        context,
-        question,
-      });
-
-    if (answer) {
+    if (savedChat) {
       reply.send(
         response({
-          data: answer,
+          data: savedChat,
           isError: false,
         })
       );
     } else {
       reply.send(
         response({
-          data: "Failed to generate response. Please try again",
-          isError: false,
+          data: "Failed to Initiate Chat. Please try again",
+          isError: true,
         })
       );
     }
   } catch (error) {
-    console.error("error", error);
+    console.error(`Something went wrong in initiateChat due to `, error);
     reply.send(
       response({
         isError: true,
@@ -70,4 +46,175 @@ const initiateChat = async (
   }
 };
 
-export { initiateChat };
+type GetChatByIdRequestType = FastifyRequest<{
+  Params: {
+    id: string;
+  };
+  Querystring: {
+    fetchMessages: boolean;
+  };
+}>;
+const getChatById = async (
+  req: GetChatByIdRequestType,
+  reply: FastifyReply
+) => {
+  try {
+    const { id } = req.params;
+    const { _id } = req.user;
+    const { fetchMessages } = req.query;
+    const chat = await ChatModel.findById(id, {
+      isDeleted: 0,
+    });
+    console.log("chat", chat);
+    let messages: any = [];
+    if (fetchMessages) {
+      messages = await MessageModel.find({
+        chatId: id,
+        createdBy: _id,
+      })
+        .sort({ createdAt: -1 })
+        .limit(10)
+        .skip(0);
+
+      console.log("messages", messages);
+    }
+    if (chat) {
+      const chatJson = chat.toJSON();
+      reply.send(
+        response({
+          data: {
+            ...chatJson,
+            messages,
+          },
+          isError: false,
+        })
+      );
+    } else {
+      reply.send(
+        response({
+          data: "Failed to generate response. Please try again",
+          isError: true,
+        })
+      );
+    }
+  } catch (error) {
+    console.error("Something went wrong in getChatById due to", error);
+    reply.send(
+      response({
+        isError: true,
+      })
+    );
+  }
+};
+
+type softDeleteChatReqType = FastifyRequest<{
+  Params: {
+    chatId: String;
+  };
+}>;
+const softDeleteChat = async (
+  req: softDeleteChatReqType,
+  reply: FastifyReply
+) => {
+  try {
+    const { _id } = req.user;
+    const { chatId } = req.params;
+    if (!chatId) {
+      reply.send(
+        response({
+          isError: true,
+          message: CHAT_MESSAGES.CHAT_ID_REQUIRED,
+        })
+      );
+    }
+    const chat = await ChatModel.findById(chatId);
+    if (chat) {
+      if (chat.createdBy === _id) {
+        await chat.updateOne({
+          isDeleted: true,
+        });
+        reply.status(200).send(
+          response({
+            isError: false,
+            message: CHAT_MESSAGES.CHAT_DELETION_SUCCESS,
+          })
+        );
+      } else {
+        reply.status(400).send(
+          response({
+            isError: true,
+            message: CHAT_MESSAGES.CHAT_DELETION_FAILED,
+          })
+        );
+      }
+    } else {
+      reply.status(400).send(
+        response({
+          isError: true,
+          message: CHAT_MESSAGES.CHAT_DONT_EXISTS,
+        })
+      );
+    }
+  } catch (error) {
+    console.error("Something went wrong in softDeleteChat due to", error);
+    reply.status(500).send(
+      response({
+        isError: true,
+        message: INTERNAL_SERVER_ERROR,
+      })
+    );
+  }
+};
+
+type GetChatsRequestType = FastifyRequest<{
+  Querystring: {
+    limit: number;
+    skip: number;
+    search: string;
+  };
+}>;
+const getChats = async (req: GetChatsRequestType, reply: FastifyReply) => {
+  try {
+    const { limit = 10, skip = 0, search = "" } = req.query;
+    const { _id } = req.user;
+    let payload = {
+      isDeleted: false,
+      createdBy: _id,
+      search,
+    };
+    if (!search) {
+      delete payload.search;
+    }
+    const chats = await ChatModel.find(payload)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    if (chats) {
+      reply.send(
+        response({
+          data: chats,
+          isError: false,
+          message: CHAT_MESSAGES.CHATS_FETCHED_SUCCESSFULLY,
+        })
+      );
+    } else {
+      reply.send(
+        response({
+          data: [],
+          isError: true,
+          message: CHAT_MESSAGES.FAILED_TO_FETCH_CHATS,
+        })
+      );
+    }
+  } catch (error) {
+    console.error("Something went wrong in getChatById due to", error);
+    reply.send(
+      response({
+        isError: true,
+      })
+    );
+  }
+};
+
+export { initiateChat, getChatById, softDeleteChat, getChats };

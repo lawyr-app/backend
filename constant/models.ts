@@ -7,4 +7,5 @@ export const MODELS_TYPE = {
   Embedding: "Embedding",
   Chat: "Chat",
   Message: "Message",
+  Favourite: "Favourite",
 };

@@ -3,15 +3,42 @@ import {
   FastifyPluginOptions,
   FastifyPluginCallback,
 } from "fastify";
-import { initiateChat } from "../controller/chat";
+import { getChatById, getChats, initiateChat, softDeleteChat } from "../controller/chat";
+import { authMiddleware } from "../prehandlers/user";
 
 const chatRoutes: FastifyPluginCallback = (
   fastify: FastifyInstance,
   options: FastifyPluginOptions,
   done
 ) => {
-  console.log("Registering routes");
-  fastify.post("/initiate", initiateChat);
+  fastify.route({
+    method: ["POST"],
+    url: "/initiate",
+    preHandler: [authMiddleware],
+    handler: initiateChat,
+  });
+
+  fastify.route({
+    method: ["GET", "HEAD"],
+    url: "/:id",
+    preHandler: [authMiddleware],
+    handler: getChatById,
+  });
+
+  fastify.route({
+    method: ["DELETE"],
+    url: "/:chatId",
+    preHandler: [authMiddleware],
+    handler: softDeleteChat,
+  });
+
+  fastify.route({
+    method: ["GET"],
+    url: "/chats",
+    preHandler: [authMiddleware],
+    handler: getChats,
+  });
+
   done();
 };
 

@@ -149,9 +149,44 @@ const signin = async (req: SinginRequestType, reply: FastifyReply) => {
   }
 };
 
-const updateUser = async (req: FastifyRequest, reply: FastifyReply) => {};
+type GetUserRequestType = FastifyRequest<{
+  Params: {
+    id: String;
+  };
+}>;
+const getUser = async (req: GetUserRequestType, reply: FastifyReply) => {
+  try {
+    const { id } = req.params;
+    const user = await UserModel.findById(id);
+    if (user) {
+      reply.status(200).send(
+        response({
+          data: user,
+          isError: false,
+          message: USER_MESSAGES.USER_FETCHED_SUCCESSFULLY,
+        })
+      );
+    } else {
+      reply.status(400).send(
+        response({
+          data: null,
+          isError: true,
+          message: USER_MESSAGES.USER_DONT_EXISTS,
+        })
+      );
+    }
+  } catch (error) {
+    console.error(`Something went wrong in getUser due to `, error);
+    return reply.status(500).send(
+      response({
+        isError: true,
+        message: INTERNAL_SERVER_ERROR,
+      })
+    );
+  }
+};
 
-const getUser = async (req: FastifyRequest, reply: FastifyReply) => {};
+const updateUser = async (req: FastifyRequest, reply: FastifyReply) => {};
 
 const deleteUser = async (req: FastifyRequest, reply: FastifyReply) => {};
 

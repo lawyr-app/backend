@@ -1,9 +1,18 @@
 import { Schema, model } from "mongoose";
 import { MODELS_TYPE } from "../constant/models";
+const { ObjectId } = Schema.Types;
 
 const chatSchema = new Schema(
   {
-    firstMessage: String,
+    firstQuestion: String,
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
+    createdBy: {
+      type: ObjectId,
+      ref: MODELS_TYPE.User,
+    },
   },
   { timestamps: true }
 );

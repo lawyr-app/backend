@@ -2,10 +2,8 @@ import { Schema, model } from "mongoose";
 import { MODELS_TYPE } from "../constant/models";
 const { ObjectId } = Schema.Types;
 
-const messageSchema = new Schema(
+const favouriteSchema = new Schema(
   {
-    question: String,
-    answer: String,
     chatId: {
       type: ObjectId,
       ref: MODELS_TYPE.Chat,
@@ -14,8 +12,12 @@ const messageSchema = new Schema(
       type: ObjectId,
       ref: MODELS_TYPE.User,
     },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );
 
-export const MessageModel = model(MODELS_TYPE.Message, messageSchema);
+export const FavouriteModel = model(MODELS_TYPE.Favourite, favouriteSchema);
