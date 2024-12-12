@@ -3,6 +3,7 @@ import { response } from "../utils/response";
 import { ChatModel } from "../model/Chat";
 import { MessageModel } from "../model/Message";
 import { CHAT_MESSAGES, INTERNAL_SERVER_ERROR } from "../constant/messages";
+import { FavouriteModel } from "../model/Favourite";
 
 type InitiateChatRequestType = FastifyRequest<{
   Body: {
@@ -129,7 +130,7 @@ const softDeleteChat = async (
     }
     const chat = await ChatModel.findById(chatId);
     if (chat) {
-      if (chat.createdBy === _id) {
+      if (String(chat.createdBy) === String(_id)) {
         await chat.updateOne({
           isDeleted: true,
         });
@@ -171,24 +172,49 @@ type GetChatsRequestType = FastifyRequest<{
     limit: number;
     skip: number;
     search: string;
+    needIsFavouritedFlag: string;
   };
 }>;
 const getChats = async (req: GetChatsRequestType, reply: FastifyReply) => {
   try {
-    const { limit = 10, skip = 0, search = "" } = req.query;
+    let {
+      limit = 10,
+      skip = 0,
+      search = "",
+      needIsFavouritedFlag = false,
+    } = req.query;
+    needIsFavouritedFlag = needIsFavouritedFlag === "true";
     const { _id } = req.user;
     let payload = {
       isDeleted: false,
       createdBy: _id,
-      search,
+      firstQuestion: { $regex: search, $options: "i" },
     };
     if (!search) {
-      delete payload.search;
+      delete payload.firstQuestion;
     }
-    const chats = await ChatModel.find(payload)
+    let chats = await ChatModel.find(payload)
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
+
+    if (needIsFavouritedFlag) {
+      chats = await Promise.all(
+        chats.map(async (m) => {
+          const favourited = await FavouriteModel.findOne({
+            createdBy: _id,
+            isDeleted: false,
+            chatId: m._id,
+          });
+
+          const jsonChat = m.toObject();
+          return {
+            ...jsonChat,
+            favouritedId: favourited?._id ?? null,
+          };
+        })
+      );
+    }
 
     if (chats) {
       reply.send(

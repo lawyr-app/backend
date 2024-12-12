@@ -24,14 +24,15 @@ const getFavourites = async (
     const payload = {
       createdBy: _id,
       isDeleted: false,
-      search,
+      title: { $regex: search, $options: "i" },
     };
     if (!search) {
-      delete payload.search;
+      delete payload.title;
     }
     const favourites = await FavouriteModel.find(payload)
       .skip(skip)
       .limit(limit)
+      .select("-isDeleted")
       .sort({ createdAt: -1 });
 
     reply.send(
@@ -56,6 +57,9 @@ type makeFavouriteReqType = FastifyRequest<{
   Params: {
     chatId: String;
   };
+  Body: {
+    title: String;
+  };
 }>;
 const makeFavourite = async (
   req: makeFavouriteReqType,
@@ -64,6 +68,7 @@ const makeFavourite = async (
   try {
     const { _id } = req.user;
     const { chatId } = req.params;
+    const { title } = req.body;
     if (!chatId) {
       reply.send(
         response({
@@ -75,6 +80,7 @@ const makeFavourite = async (
       const favourite = await FavouriteModel.create({
         chatId,
         createdBy: _id,
+        title,
       });
       if (favourite) {
         reply.status(201).send(
