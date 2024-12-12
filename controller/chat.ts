@@ -185,59 +185,63 @@ const getChats = async (req: GetChatsRequestType, reply: FastifyReply) => {
     } = req.query;
     needIsFavouritedFlag = needIsFavouritedFlag === "true";
     const { _id } = req.user;
-    let payload = {
+    const payload = {
       isDeleted: false,
       createdBy: _id,
-      firstQuestion: { $regex: search, $options: "i" },
+      ...(search && { firstQuestion: { $regex: search, $options: "i" } }),
     };
-    if (!search) {
-      delete payload.firstQuestion;
-    }
-    let chats = await ChatModel.find(payload)
+
+    const chats = await ChatModel.find(payload)
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
 
-    if (needIsFavouritedFlag) {
-      chats = await Promise.all(
-        chats.map(async (m) => {
-          const favourited = await FavouriteModel.findOne({
-            createdBy: _id,
-            isDeleted: false,
-            chatId: m._id,
-          });
-
-          const jsonChat = m.toObject();
-          return {
-            ...jsonChat,
-            favouritedId: favourited?._id ?? null,
-          };
-        })
-      );
+    if (!needIsFavouritedFlag) {
+      sendChats(reply, chats);
+      return;
     }
 
-    if (chats) {
-      reply.send(
-        response({
-          data: chats,
-          isError: false,
-          message: CHAT_MESSAGES.CHATS_FETCHED_SUCCESSFULLY,
-        })
-      );
-    } else {
-      reply.send(
-        response({
-          data: [],
-          isError: true,
-          message: CHAT_MESSAGES.FAILED_TO_FETCH_CHATS,
-        })
-      );
-    }
+    const chatsWithFavouritedFlag = await Promise.all(
+      chats.map(async (m) => {
+        const favourited = await FavouriteModel.findOne({
+          createdBy: _id,
+          isDeleted: false,
+          chatId: m._id,
+        });
+
+        const jsonChat = m.toObject();
+        return {
+          ...jsonChat,
+          favouritedId: favourited?._id ?? null,
+        };
+      })
+    );
+    sendChats(reply, chatsWithFavouritedFlag);
   } catch (error) {
     console.error("Something went wrong in getChatById due to", error);
     reply.send(
       response({
         isError: true,
+      })
+    );
+  }
+};
+
+const sendChats = (reply: FastifyReply, data: any) => {
+  if (data) {
+    reply.send(
+      response({
+        data: data,
+        isError: false,
+        message: CHAT_MESSAGES.CHATS_FETCHED_SUCCESSFULLY,
+      })
+    );
+  } else {
+    reply.send(
+      response({
+        data: [],
+        isError: true,
+        message: CHAT_MESSAGES.FAILED_TO_FETCH_CHATS,
       })
     );
   }

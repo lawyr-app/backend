@@ -24,11 +24,8 @@ const getFavourites = async (
     const payload = {
       createdBy: _id,
       isDeleted: false,
-      title: { $regex: search, $options: "i" },
+      ...(search && { title: { $regex: search, $options: "i" } }),
     };
-    if (!search) {
-      delete payload.title;
-    }
     const favourites = await FavouriteModel.find(payload)
       .skip(skip)
       .limit(limit)
