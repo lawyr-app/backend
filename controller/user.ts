@@ -2,6 +2,7 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import { UserModel } from "../model/User";
 import { response } from "../utils/response";
 import { INTERNAL_SERVER_ERROR, USER_MESSAGES } from "../constant/messages";
+import { DeletedUserModel } from "../model/DeletedUser";
 
 type userExistsRequestType = FastifyRequest<{
   Params: {
@@ -186,8 +187,108 @@ const getUser = async (req: GetUserRequestType, reply: FastifyReply) => {
   }
 };
 
-const updateUser = async (req: FastifyRequest, reply: FastifyReply) => {};
+type UpdateUserRequestType = FastifyRequest<{
+  Body: {
+    username: String;
+  };
+}>;
+const updateUser = async (req: UpdateUserRequestType, reply: FastifyReply) => {
+  try {
+    const { _id } = req.user;
+    const { username } = req.body;
+    const user = await UserModel.findById(_id);
+    if (user) {
+      const updatedUser = await user.updateOne(
+        {
+          username,
+        },
+        {
+          new: true,
+        }
+      );
+      reply.status(200).send(
+        response({
+          data: updatedUser,
+          isError: false,
+          message: USER_MESSAGES.USER_FETCHED_SUCCESSFULLY,
+        })
+      );
+    } else {
+      reply.status(400).send(
+        response({
+          data: null,
+          isError: true,
+          message: USER_MESSAGES.USER_DONT_EXISTS,
+        })
+      );
+    }
+  } catch (error) {
+    console.error(`Something went wrong in updateUser due to `, error);
+    return reply.status(500).send(
+      response({
+        isError: true,
+        message: INTERNAL_SERVER_ERROR,
+      })
+    );
+  }
+};
 
-const deleteUser = async (req: FastifyRequest, reply: FastifyReply) => {};
+type DeleteUserRequestType = FastifyRequest<{
+  Body: {
+    reason: String;
+  };
+}>;
+const deleteUser = async (req: DeleteUserRequestType, reply: FastifyReply) => {
+  try {
+    const { _id } = req.user;
+    const { reason } = req.body;
+    const user = await UserModel.findById(_id);
+    if (user) {
+      const deleted = await DeletedUserModel.create({
+        userId: _id,
+        reason,
+      });
+      const updatedUser = await user.updateOne(
+        {
+          isDeleted: true,
+        },
+        { new: true }
+      );
+      if (deleted && updatedUser) {
+        reply.status(200).send(
+          response({
+            data: user,
+            isError: false,
+            message: USER_MESSAGES.USER_DELETED_SUCCESSFULLY,
+          })
+        );
+      } else {
+        reply.status(400).send(
+          response({
+            data: user,
+            isError: false,
+            message: USER_MESSAGES.USER_DELETION_FAILURE,
+          })
+        );
+      }
+    } else {
+      reply.status(400).send(
+        response({
+          data: null,
+          isError: true,
+          message: USER_MESSAGES.USER_DONT_EXISTS,
+        })
+      );
+    }
+  } catch (error) {
+    console.error(`Something went wrong in updateUser due to `, error);
+    return reply.status(500).send(
+      response({
+        isError: true,
+        message: INTERNAL_SERVER_ERROR,
+      })
+    );
+  }
+};
 
 export { signup, updateUser, getUser, deleteUser, signin, userExists };

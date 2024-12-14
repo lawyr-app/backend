@@ -7,6 +7,9 @@ const userSchema = new Schema(
     username: String,
     social: String,
     isLawyer: Boolean,
+
+    isDeleted: Boolean,
+
     //we get it from google
     googleId: String,
     name: String,

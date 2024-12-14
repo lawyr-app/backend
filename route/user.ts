@@ -18,7 +18,7 @@ const userRoutes: FastifyPluginCallback = (
   done
 ) => {
   fastify.get("/user/:userId", getUser);
-  fastify.delete("/user/:userId", deleteUser);
+  fastify.post("/delete", deleteUser);
   fastify.put("/signin", signin);
   fastify.post("/signup", signup);
   fastify.put("/update", updateUser);

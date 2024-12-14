@@ -8,4 +8,5 @@ export const MODELS_TYPE = {
   Chat: "Chat",
   Message: "Message",
   Favourite: "Favourite",
+  DeletedUser: "DeletedUser",
 };
