@@ -8,7 +8,10 @@ const userSchema = new Schema(
     social: String,
     isLawyer: Boolean,
 
-    isDeleted: Boolean,
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
 
     //we get it from google
     googleId: String,

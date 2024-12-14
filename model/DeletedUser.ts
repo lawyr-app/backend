@@ -6,7 +6,7 @@ const deletedUserSchema = new Schema(
   {
     userId: {
       type: ObjectId,
-      ref: "Embedding",
+      ref: MODELS_TYPE.User,
     },
     reason: String,
   },

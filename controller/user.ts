@@ -120,13 +120,20 @@ const signin = async (req: SinginRequestType, reply: FastifyReply) => {
     const { googleId } = req.body;
     const findUser = await UserModel.findOne({
       googleId,
+      isDeleted: false,
+    });
+    console.log({
+      findUser,
+      condition: findUser && !findUser.isDeleted,
     });
     if (findUser && !findUser.isDeleted) {
-      const updatedUser = findUser
-        .updateOne(req.body, {
+      const updatedUser = await UserModel.findByIdAndUpdate(
+        findUser._id,
+        req.body,
+        {
           new: true,
-        })
-        .select("-isDeleted");
+        }
+      ).select("-isDeleted");
       if (updatedUser) {
         reply.status(200).send(
           response({
