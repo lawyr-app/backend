@@ -11,18 +11,52 @@ import {
   signin,
   userExists,
 } from "../controller/user";
+import { authMiddleware } from "../prehandlers/user";
 
 const userRoutes: FastifyPluginCallback = (
   fastify: FastifyInstance,
   options: FastifyPluginOptions,
   done
 ) => {
-  fastify.get("/user/:userId", getUser);
-  fastify.post("/delete", deleteUser);
-  fastify.put("/signin", signin);
-  fastify.post("/signup", signup);
-  fastify.put("/update", updateUser);
-  fastify.get("/exists/:googleId", userExists);
+  fastify.route({
+    method: ["GET"],
+    url: "/user/:userId",
+    handler: getUser,
+  });
+
+  fastify.route({
+    method: ["POST"],
+    url: "/delete",
+    preHandler: [authMiddleware],
+    handler: deleteUser,
+  });
+
+  fastify.route({
+    method: ["PUT"],
+    url: "/signin",
+    preHandler: [authMiddleware],
+    handler: signin,
+  });
+
+  fastify.route({
+    method: ["POST"],
+    url: "/signup",
+    preHandler: [authMiddleware],
+    handler: signup,
+  });
+
+  fastify.route({
+    method: ["PUT"],
+    url: "/update",
+    preHandler: [authMiddleware],
+    handler: updateUser,
+  });
+
+  fastify.route({
+    method: ["GET"],
+    url: "/exists/:googleId",
+    handler: userExists,
+  });
   done();
 };
 

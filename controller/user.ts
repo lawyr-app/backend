@@ -12,7 +12,7 @@ type userExistsRequestType = FastifyRequest<{
 const userExists = async (req: userExistsRequestType, reply: FastifyReply) => {
   try {
     const { googleId } = req.params;
-    const userExists = await UserModel.findOne({ googleId });
+    const userExists = await UserModel.findOne({ googleId, isDeleted: false });
     return reply.status(200).send(
       response({
         data: !!userExists,
@@ -55,7 +55,10 @@ type SingupRequestType = FastifyRequest<{
 const signup = async (req: SingupRequestType, reply: FastifyReply) => {
   try {
     const { sub } = req.body;
-    const userExists = await UserModel.findOne({ googleId: sub });
+    const userExists = await UserModel.findOne({
+      googleId: sub,
+      isDeleted: false,
+    });
     if (userExists) {
       return reply.status(409).send(
         response({
@@ -115,20 +118,32 @@ type SinginRequestType = FastifyRequest<{
 const signin = async (req: SinginRequestType, reply: FastifyReply) => {
   try {
     const { googleId } = req.body;
-    const updatedUser = await UserModel.findOneAndUpdate(
-      { googleId },
-      req.body,
-      { new: true }
-    );
-    console.log("updatedUser", updatedUser);
-    if (updatedUser) {
-      reply.status(200).send(
-        response({
-          data: updatedUser,
-          isError: false,
-          message: USER_MESSAGES.USER_SIGNIN_SUCCESS,
+    const findUser = await UserModel.findOne({
+      googleId,
+    });
+    if (findUser && !findUser.isDeleted) {
+      const updatedUser = findUser
+        .updateOne(req.body, {
+          new: true,
         })
-      );
+        .select("-isDeleted");
+      if (updatedUser) {
+        reply.status(200).send(
+          response({
+            data: updatedUser,
+            isError: false,
+            message: USER_MESSAGES.USER_SIGNIN_SUCCESS,
+          })
+        );
+      } else {
+        reply.status(400).send(
+          response({
+            data: null,
+            isError: true,
+            message: USER_MESSAGES.USER_SIGNIN_ERROR,
+          })
+        );
+      }
     } else {
       reply.status(400).send(
         response({
