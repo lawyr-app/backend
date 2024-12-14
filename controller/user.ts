@@ -213,13 +213,10 @@ const updateUser = async (req: UpdateUserRequestType, reply: FastifyReply) => {
     const { username } = req.body;
     const user = await UserModel.findById(_id);
     if (user) {
-      const updatedUser = await user.updateOne(
-        {
-          username,
-        },
-        {
-          new: true,
-        }
+      const updatedUser = await UserModel.findByIdAndUpdate(
+        _id,
+        { username },
+        { new: true }
       );
       reply.status(200).send(
         response({
