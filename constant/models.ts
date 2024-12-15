@@ -9,4 +9,5 @@ export const MODELS_TYPE = {
   Message: "Message",
   Favourite: "Favourite",
   DeletedUser: "DeletedUser",
+  Share: "Share",
 };
