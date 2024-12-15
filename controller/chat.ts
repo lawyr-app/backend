@@ -53,6 +53,7 @@ type GetChatByIdRequestType = FastifyRequest<{
   };
   Querystring: {
     fetchMessages: boolean;
+    fetchFavouriteId: boolean;
   };
 }>;
 const getChatById = async (
@@ -62,22 +63,29 @@ const getChatById = async (
   try {
     const { id } = req.params;
     const { _id } = req.user;
-    const { fetchMessages } = req.query;
+    const { fetchMessages, fetchFavouriteId } = req.query;
     const chat = await ChatModel.findById(id, {
       isDeleted: 0,
     });
-    console.log("chat", chat);
+
     let messages: any = [];
+    let favouritedId = null;
+    if (fetchFavouriteId) {
+      const favourited = await FavouriteModel.findOne({
+        createdBy: _id,
+        isDeleted: false,
+        chatId: id,
+      });
+      favouritedId = favourited?._id;
+    }
     if (fetchMessages) {
       messages = await MessageModel.find({
         chatId: id,
         createdBy: _id,
       })
-        .sort({ createdAt: -1 })
+        .sort({ createdAt: 1 })
         .limit(10)
         .skip(0);
-
-      console.log("messages", messages);
     }
     if (chat) {
       const chatJson = chat.toJSON();
@@ -86,15 +94,18 @@ const getChatById = async (
           data: {
             ...chatJson,
             messages,
+            favouritedId,
           },
           isError: false,
+          message: CHAT_MESSAGES.CHAT_FETCHED_SUCCESSFULLY,
         })
       );
     } else {
       reply.send(
         response({
-          data: "Failed to generate response. Please try again",
+          data: null,
           isError: true,
+          message: CHAT_MESSAGES.FAILED_TO_FETCH_CHAT,
         })
       );
     }
@@ -103,6 +114,7 @@ const getChatById = async (
     reply.send(
       response({
         isError: true,
+        message: INTERNAL_SERVER_ERROR,
       })
     );
   }
