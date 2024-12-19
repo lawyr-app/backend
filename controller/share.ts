@@ -2,6 +2,8 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import { ShareModel } from "../model/Share";
 import { response } from "../utils/response";
 import { INTERNAL_SERVER_ERROR, SHARE_MESSAGES } from "../constant/messages";
+import { MessageModel } from "../model/Message";
+import { ChatModel } from "../model/Chat";
 
 type getShareByIdReqType = FastifyRequest<{
   Params: {
@@ -12,7 +14,7 @@ const getShareById = async (req: getShareByIdReqType, reply: FastifyReply) => {
   try {
     const { id } = req.params;
     const shared = await ShareModel.findById(id);
-    if (shared) {
+    if (shared && !shared.isDeleted) {
       return reply.status(200).send(
         response({
           data: shared,
@@ -25,7 +27,7 @@ const getShareById = async (req: getShareByIdReqType, reply: FastifyReply) => {
         response({
           data: null,
           isError: true,
-          message: SHARE_MESSAGES.FAILED_TO_FETCH_SHARING,
+          message: SHARE_MESSAGES.NO_SHARING_EXISTS,
         })
       );
     }
@@ -42,10 +44,72 @@ const getShareById = async (req: getShareByIdReqType, reply: FastifyReply) => {
 };
 
 type continueChatReqType = FastifyRequest<{
-  Body: {};
+  Body: {
+    shareId: String;
+  };
 }>;
 const continueChat = async (req: continueChatReqType, reply: FastifyReply) => {
   try {
+    const { _id } = req.user;
+    const { shareId } = req.body;
+    const share = await ShareModel.findById(shareId).populate("sharedMessages");
+    if (share && !share.isDeleted) {
+      const savedChat = await ChatModel.create({
+        firstQuestion: share.title,
+        createdBy: _id,
+      });
+      if (savedChat) {
+        const messages = share.sharedMessages
+          .map((m) => {
+            if ("question" in m && "answer" in m) {
+              return {
+                question: m?.question,
+                answer: m?.answer,
+                chatId: savedChat._id,
+                createdBy: _id,
+              };
+            } else {
+              return null;
+            }
+          })
+          .filter((f) => f !== null);
+
+        const savedMessages = await MessageModel.insertMany(messages);
+        if (savedMessages) {
+          reply.status(201).send(
+            response({
+              data: null,
+              isError: true,
+              message: SHARE_MESSAGES.CONTINUED_SUCCESS,
+            })
+          );
+        } else {
+          reply.status(400).send(
+            response({
+              data: null,
+              isError: true,
+              message: SHARE_MESSAGES.CONTINUED_FAILED,
+            })
+          );
+        }
+      } else {
+        reply.status(400).send(
+          response({
+            data: null,
+            isError: true,
+            message: SHARE_MESSAGES.CONTINUED_FAILED,
+          })
+        );
+      }
+    } else {
+      return reply.status(400).send(
+        response({
+          data: null,
+          isError: true,
+          message: SHARE_MESSAGES.NO_SHARING_EXISTS,
+        })
+      );
+    }
   } catch (error) {
     console.error(`Something went wrong in continueChat due to `, error);
     return reply.status(500).send(
@@ -105,10 +169,22 @@ const deleteShareById = async (
   }
 };
 
-type getSharedReqType = FastifyRequest<{}>;
+type getSharedReqType = FastifyRequest<{
+  Querystring: {
+    limit: number;
+    skip: number;
+    search: string;
+  };
+}>;
 const getShared = async (req: getSharedReqType, reply: FastifyReply) => {
   try {
-    const shared = await ShareModel.find({});
+    const { limit = 10, skip = 0, search } = req.query;
+    const { _id } = req.user;
+    const payload = {
+      createdBy: _id,
+      ...(search && { title: { $regex: search, $options: "i" } }),
+    };
+    const shared = await ShareModel.find(payload).skip(+skip).limit(+limit);
     if (shared) {
       return reply.status(200).send(
         response({
@@ -198,11 +274,16 @@ const createShare = async (req: createShareReqType, reply: FastifyReply) => {
   try {
     const { _id } = req.user;
     const { title, chatId, isPublic } = req.body;
+    const messages = await MessageModel.find({
+      isDeleted: false,
+      chatId,
+    });
     const share = await ShareModel.create({
       title,
       chatId,
       createdBy: _id,
       isPublic,
+      sharedMessages: messages.map((m) => m._id),
     });
     if (share) {
       return reply.status(201).send(

@@ -21,6 +21,12 @@ const shareSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    sharedMessages: [
+      {
+        type: ObjectId,
+        ref: MODELS_TYPE.Message,
+      },
+    ],
   },
   { timestamps: true }
 );

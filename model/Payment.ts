@@ -10,4 +10,4 @@ const paymentSchema = new Schema(
   { timestamps: true }
 );
 
-export const paymentModel = model(MODELS_TYPE.Payment, paymentSchema);
+export const PaymentModel = model(MODELS_TYPE.Payment, paymentSchema);

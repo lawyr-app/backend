@@ -13,6 +13,10 @@ const chatSchema = new Schema(
       type: ObjectId,
       ref: MODELS_TYPE.User,
     },
+    continuedSharedId: {
+      type: ObjectId,
+      ref: MODELS_TYPE.Share,
+    },
   },
   { timestamps: true }
 );
