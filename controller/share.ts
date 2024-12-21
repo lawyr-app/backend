@@ -123,8 +123,8 @@ const continueChat = async (req: continueChatReqType, reply: FastifyReply) => {
 };
 
 type deleteShareByIdReqType = FastifyRequest<{
-  Body: {
-    id: String;
+  Params: {
+    sharedId: String;
   };
 }>;
 const deleteShareById = async (
@@ -132,14 +132,15 @@ const deleteShareById = async (
   reply: FastifyReply
 ) => {
   try {
-    const { id } = req.body;
+    const { sharedId } = req.params;
     const deletedShare = await ShareModel.findByIdAndUpdate(
-      id,
+      sharedId,
       {
         isDeleted: true,
       },
       { new: true }
     );
+    console.log("deletedShare", deletedShare);
     if (deletedShare) {
       return reply.status(200).send(
         response({
@@ -182,6 +183,7 @@ const getShared = async (req: getSharedReqType, reply: FastifyReply) => {
     const { _id } = req.user;
     const payload = {
       createdBy: _id,
+      isDeleted: false,
       ...(search && { title: { $regex: search, $options: "i" } }),
     };
     const shared = await ShareModel.find(payload).skip(+skip).limit(+limit);
