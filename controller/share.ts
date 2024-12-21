@@ -13,7 +13,7 @@ type getShareByIdReqType = FastifyRequest<{
 const getShareById = async (req: getShareByIdReqType, reply: FastifyReply) => {
   try {
     const { id } = req.params;
-    const shared = await ShareModel.findById(id);
+    const shared = await ShareModel.findById(id).populate("sharedMessages");
     if (shared && !shared.isDeleted) {
       return reply.status(200).send(
         response({
