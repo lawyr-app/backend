@@ -5,14 +5,15 @@ import { INTERNAL_SERVER_ERROR, USER_MESSAGES } from "../constant/messages";
 import { DeletedUserModel } from "../model/DeletedUser";
 
 type userExistsRequestType = FastifyRequest<{
-  Params: {
-    googleId: String;
+  Body: {
+    email: String;
   };
 }>;
 const userExists = async (req: userExistsRequestType, reply: FastifyReply) => {
   try {
-    const { googleId } = req.params;
-    const userExists = await UserModel.findOne({ googleId, isDeleted: false });
+    const { email } = req.body;
+    const userExists = await UserModel.findOne({ email, isDeleted: false });
+    console.log("userExists", userExists);
     return reply.status(200).send(
       response({
         data: !!userExists,
@@ -54,11 +55,12 @@ type SingupRequestType = FastifyRequest<{
 }>;
 const signup = async (req: SingupRequestType, reply: FastifyReply) => {
   try {
-    const { sub } = req.body;
+    const { email } = req.body;
     const userExists = await UserModel.findOne({
-      googleId: sub,
+      email,
       isDeleted: false,
     });
+    console.log("signup userExists", userExists);
     if (userExists) {
       return reply.status(409).send(
         response({
@@ -117,9 +119,9 @@ type SinginRequestType = FastifyRequest<{
 }>;
 const signin = async (req: SinginRequestType, reply: FastifyReply) => {
   try {
-    const { googleId } = req.body;
+    const { email } = req.body;
     const findUser = await UserModel.findOne({
-      googleId,
+      email,
       isDeleted: false,
     });
     console.log({
@@ -180,7 +182,7 @@ type GetUserRequestType = FastifyRequest<{
 const getUser = async (req: GetUserRequestType, reply: FastifyReply) => {
   try {
     const { id } = req.params;
-    const user = await UserModel.findById(id);
+    const user = await UserModel.findById(id).select("-isDeleted");
     if (user) {
       reply.status(200).send(
         response({

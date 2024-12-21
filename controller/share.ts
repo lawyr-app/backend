@@ -57,6 +57,7 @@ const continueChat = async (req: continueChatReqType, reply: FastifyReply) => {
       const savedChat = await ChatModel.create({
         firstQuestion: share.title,
         createdBy: _id,
+        continuedSharedId: shareId,
       });
       if (savedChat) {
         const messages = share.sharedMessages
@@ -67,6 +68,7 @@ const continueChat = async (req: continueChatReqType, reply: FastifyReply) => {
                 answer: m?.answer,
                 chatId: savedChat._id,
                 createdBy: _id,
+                sharedId: shareId,
               };
             } else {
               return null;
@@ -78,8 +80,8 @@ const continueChat = async (req: continueChatReqType, reply: FastifyReply) => {
         if (savedMessages) {
           reply.status(201).send(
             response({
-              data: null,
-              isError: true,
+              data: savedChat,
+              isError: false,
               message: SHARE_MESSAGES.CONTINUED_SUCCESS,
             })
           );
@@ -280,6 +282,7 @@ const createShare = async (req: createShareReqType, reply: FastifyReply) => {
       isDeleted: false,
       chatId,
     });
+    console.log("messages", messages);
     const share = await ShareModel.create({
       title,
       chatId,

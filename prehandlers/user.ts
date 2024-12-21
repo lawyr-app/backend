@@ -5,6 +5,7 @@ import {
   FastifyPluginOptions,
 } from "fastify";
 import { UserModel } from "../model/User";
+import { response } from "../utils/response";
 const { OAuth2Client } = require("google-auth-library");
 
 const CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_AUTH;
@@ -17,12 +18,18 @@ const googleAuthMiddleware = async (
   const authHeader = request?.headers?.authorization;
 
   if (!authHeader) {
-    return reply.status(401).send({ error: "No token provided" });
+    return reply
+      .status(401)
+      .send(response({ isError: true, message: "No token provided" }));
   }
 
   const token = authHeader.split(" ")[1];
   if (!token) {
-    return reply.status(401).send({ error: "Invalid authorization format" });
+    return reply
+      .status(401)
+      .send(
+        response({ isError: true, message: "Invalid authorization format" })
+      );
   }
 
   try {
@@ -31,10 +38,16 @@ const googleAuthMiddleware = async (
       audience: CLIENT_ID,
     });
     const payload = ticket.getPayload();
+    console.log("payload", payload);
     const user = await UserModel.findOne({
-      googleId: payload.sub,
+      email: payload.email,
+      isDeleted: false,
     });
-    request.user = user;
+    if (!user) {
+      reply.status(401).send(response({ isError: true, message: "No User" }));
+    } else {
+      request.user = user;
+    }
   } catch (err) {
     console.error(err);
     return reply.status(401).send({ error: "Invalid token" });

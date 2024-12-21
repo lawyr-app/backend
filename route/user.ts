@@ -21,6 +21,7 @@ const userRoutes: FastifyPluginCallback = (
   fastify.route({
     method: ["GET"],
     url: "/user/:userId",
+    preHandler: [authMiddleware],
     handler: getUser,
   });
 
@@ -34,14 +35,12 @@ const userRoutes: FastifyPluginCallback = (
   fastify.route({
     method: ["PUT"],
     url: "/signin",
-    preHandler: [authMiddleware],
     handler: signin,
   });
 
   fastify.route({
     method: ["POST"],
     url: "/signup",
-    preHandler: [authMiddleware],
     handler: signup,
   });
 
@@ -53,8 +52,8 @@ const userRoutes: FastifyPluginCallback = (
   });
 
   fastify.route({
-    method: ["GET"],
-    url: "/exists/:googleId",
+    method: ["POST"],
+    url: "/exists",
     handler: userExists,
   });
   done();

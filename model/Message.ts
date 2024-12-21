@@ -14,6 +14,14 @@ const messageSchema = new Schema(
       type: ObjectId,
       ref: MODELS_TYPE.User,
     },
+    sharedId: {
+      type: ObjectId,
+      ref: MODELS_TYPE.Share,
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );
