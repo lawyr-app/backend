@@ -4,7 +4,11 @@ import {
   FastifyPluginCallback,
 } from "fastify";
 import { authMiddleware } from "../prehandlers/user";
-import { getChatUserMessages, startMessage } from "../controller/message";
+import {
+  getChatUserMessages,
+  getMessage,
+  startMessage,
+} from "../controller/message";
 
 const messageRoutes: FastifyPluginCallback = (
   fastify: FastifyInstance,
@@ -23,6 +27,11 @@ const messageRoutes: FastifyPluginCallback = (
     url: "/user/:chatId",
     preHandler: [authMiddleware],
     handler: getChatUserMessages,
+  });
+  fastify.route({
+    method: ["GET"],
+    url: "/get/:id",
+    handler: getMessage,
   });
 
   done();

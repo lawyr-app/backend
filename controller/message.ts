@@ -6,7 +6,9 @@ import { generateEmbeddings } from "../utils/generateEmbedding";
 import { getChatContext, lawPromptTemplate } from "../utils/chatUtils";
 import { ChatGroq } from "@langchain/groq";
 import { StringOutputParser } from "@langchain/core/output_parsers";
-import { GROQ_API_KEY } from "../constant/envvariables";
+import { GROQ_API_KEY, GEMINI_API_KEY } from "../constant/envvariables";
+import { INTERNAL_SERVER_ERROR } from "../constant/messages";
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 
 type GetChatUserMessagesRequestType = FastifyRequest<{
   Params: {
@@ -78,49 +80,10 @@ const startMessage = async (
       chatId,
       createdBy: _id,
     });
-
-    const questionEmbeddings = await generateEmbeddings(question);
-    const context = await getChatContext({
-      nameSpace: "India",
-      questionEmbedding: questionEmbeddings,
-    });
-    if (!context) {
-      return reply.send(
-        response({
-          data: "No context found",
-          isError: false,
-        })
-      );
-    }
-
-    const llm = new ChatGroq({
-      apiKey: GROQ_API_KEY,
-      model: "llama-3.1-8b-instant",
-      streaming: true,
-    });
-
-    const answer = await lawPromptTemplate
-      .pipe(llm)
-      .pipe(new StringOutputParser())
-      .invoke({
-        context,
-        question,
-      });
-
-    const updatedMessage = await MessageModel.findByIdAndUpdate(
-      savedMessage._id,
-      {
-        answer,
-      },
-      {
-        new: true,
-      }
-    );
-
-    if (answer) {
+    if (savedMessage) {
       reply.send(
         response({
-          data: updatedMessage,
+          data: savedMessage,
           isError: false,
           message: "",
         })
@@ -143,4 +106,126 @@ const startMessage = async (
   }
 };
 
-export { getChatUserMessages, startMessage };
+type GetMessageRequestType = FastifyRequest<{
+  Params: {
+    id: string;
+  };
+}>;
+const getMessage = async (req: GetMessageRequestType, reply: FastifyReply) => {
+  reply.raw.setHeader("Content-Type", "text/event-stream");
+  reply.raw.setHeader("Connection", "keep-alive");
+  reply.raw.setHeader("Cache-Control", "no-store");
+  reply.raw.setHeader("Access-Control-Allow-Origin", "*");
+  reply.raw.flushHeaders();
+
+  type sendSSEProps = {
+    data: any;
+    isError?: boolean;
+    message: string;
+    stopTheSSE?: boolean;
+  };
+  const sendSSE = ({
+    data,
+    isError = false,
+    message,
+    stopTheSSE = false,
+  }: sendSSEProps) => {
+    const stringified = JSON.stringify(
+      response({
+        data,
+        isError,
+        message,
+      })
+    );
+    reply.raw.write(`data: ${stringified}\n\n`);
+    if (stopTheSSE) {
+      reply.raw.end();
+    }
+  };
+  try {
+    const { id } = req.params;
+    const message = await MessageModel.findById(id);
+    if (message) {
+      const { question } = message;
+      if (!question) {
+        sendSSE({
+          data: null,
+          isError: true,
+          message: "NO_CONTEXT",
+          stopTheSSE: true,
+        });
+        return;
+      }
+      const questionEmbeddings = await generateEmbeddings(question);
+      const context = await getChatContext({
+        nameSpace: "India",
+        questionEmbedding: questionEmbeddings,
+      });
+      if (!context) {
+        sendSSE({
+          data: null,
+          isError: true,
+          message: "NO_CONTEXT",
+          stopTheSSE: true,
+        });
+        return;
+      }
+
+      const llm = new ChatGoogleGenerativeAI({
+        apiKey: GEMINI_API_KEY,
+        model: "gemini-1.5-flash",
+        streaming: true,
+      });
+      sendSSE({
+        data: "",
+        message: "STARTED",
+      });
+      const answer = await lawPromptTemplate
+        .pipe(llm)
+        .pipe(new StringOutputParser())
+        .stream({ context, question });
+
+      const allAnswer = [];
+
+      for await (const chunk of answer) {
+        allAnswer.push(chunk);
+        sendSSE({
+          data: chunk,
+          message: "IN_PROGRESS",
+          stopTheSSE: false,
+        });
+      }
+
+      const updatedMessage = await MessageModel.findByIdAndUpdate(
+        id,
+        {
+          answer: allAnswer.join(""),
+        },
+        {
+          new: true,
+        }
+      );
+      sendSSE({
+        data: updatedMessage,
+        message: "COMPLETED",
+        stopTheSSE: true,
+      });
+    } else {
+    }
+  } catch (error) {
+    console.log("errpr bicth", error);
+    reply.send(
+      response({
+        isError: true,
+        message: INTERNAL_SERVER_ERROR,
+      })
+    );
+    sendSSE({
+      data: null,
+      message: INTERNAL_SERVER_ERROR,
+      stopTheSSE: true,
+    });
+  }
+};
+
+export { getChatUserMessages, startMessage, getMessage };

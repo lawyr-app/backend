@@ -13,3 +13,5 @@ declare module "fastify" {
     user?: any; // Define the shape of `user` if known
   }
 }
+
+declare module "fastify-sse";

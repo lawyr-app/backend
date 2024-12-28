@@ -58,7 +58,7 @@ Answer the question based only on the following context:
 
 Question: {question}
 
-Please provide a concise answer and cite specific information from the legal documents when possible.If the answer cannot be found in the context, say "I cannot find information about this in the provided legal documents". Dont forget to mention article number and article name.Answer has to be regarding Country India.article ,law name and number should be highlighted properly.Answer should be in markdown"
+Please provide a concise answer and cite specific information from the legal documents when possible.If the answer cannot be found in the context, say "I cannot find information about this in the provided legal documents"Answer should be in markdown.Also if possible use points to make the answer consise....Dont elaborate much.Keep it simple like the user is just 16 years old"
 
 Answer:
 `);
