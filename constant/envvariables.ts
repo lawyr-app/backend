@@ -6,6 +6,7 @@ const MONGODB_URL = process.env.MONGODB;
 const PORT_NUMBER = process.env.PORT ? +process.env.PORT : 7000;
 const HUGGING_FACE_TOKEN = process.env.HF_TOKEN;
 const PINECONE = process.env.PINECONE;
+const JWT_SECRET = process.env.JWT_SECRET;
 
 export {
   GROQ_API_KEY,
@@ -14,4 +15,5 @@ export {
   HUGGING_FACE_TOKEN,
   PINECONE,
   GEMINI_API_KEY,
+  JWT_SECRET,
 };

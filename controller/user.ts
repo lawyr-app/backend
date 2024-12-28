@@ -3,6 +3,9 @@ import { UserModel } from "../model/User";
 import { response } from "../utils/response";
 import { INTERNAL_SERVER_ERROR, USER_MESSAGES } from "../constant/messages";
 import { DeletedUserModel } from "../model/DeletedUser";
+import jwt from "jsonwebtoken";
+import { JWT_SECRET } from "../constant/envvariables";
+import { generateToken } from "../utils/token";
 
 type userExistsRequestType = FastifyRequest<{
   Body: {
@@ -36,31 +39,46 @@ const userExists = async (req: userExistsRequestType, reply: FastifyReply) => {
 
 type SingupRequestType = FastifyRequest<{
   Body: {
-    aud: String;
-    azp: String;
-    email: String;
-    email_verified: Boolean;
-    exp: Number;
-    family_name: String;
-    given_name: String;
-    iat: Number;
-    iss: String;
-    jti: String;
+    username: String;
+    social: String;
+    isLawyer: Boolean;
+    googleId: String;
     name: String;
-    nbf: Number;
-    picture: String;
-    token: String;
-    sub: String;
+    googleFirstName: String;
+    googleLastName: String;
+    profileImageUrl: String;
+    email: String;
+    emailVerified: Boolean;
+    accessToken: String;
+    tokenExpiresIn: Number;
+    tokenIssuedAt: Number;
+    tokenId: String;
+    tokenNotValidBefore: Number;
   };
 }>;
 const signup = async (req: SingupRequestType, reply: FastifyReply) => {
   try {
-    const { email } = req.body;
+    const {
+      username,
+      social,
+      isLawyer,
+      googleId,
+      name,
+      googleFirstName,
+      googleLastName,
+      profileImageUrl,
+      email,
+      emailVerified,
+      accessToken,
+      tokenExpiresIn,
+      tokenIssuedAt,
+      tokenId,
+      tokenNotValidBefore,
+    } = req.body;
     const userExists = await UserModel.findOne({
       email,
       isDeleted: false,
     });
-    console.log("signup userExists", userExists);
     if (userExists) {
       return reply.status(409).send(
         response({
@@ -70,12 +88,44 @@ const signup = async (req: SingupRequestType, reply: FastifyReply) => {
         })
       );
     }
-    const newUser = await UserModel.create(req.body);
-    console.log("newUser", newUser);
+    const newUser = await UserModel.create({
+      username,
+      social,
+      isLawyer,
+      email,
+      profileImageUrl,
+      googleMetadata: {
+        googleId,
+        name,
+        googleFirstName,
+        googleLastName,
+        emailVerified,
+        accessToken,
+        tokenExpiresIn,
+        tokenIssuedAt,
+        tokenId,
+        tokenNotValidBefore,
+      },
+    });
     if (newUser) {
+      const userId = String(newUser._id);
+
+      const { token, expiresAt } = generateToken({
+        userId,
+      });
+      const updatedUser = await UserModel.findByIdAndUpdate(
+        userId,
+        {
+          tokenDetails: {
+            token,
+            expiresAt,
+          },
+        },
+        { new: true }
+      );
       reply.status(201).send(
         response({
-          data: newUser,
+          data: updatedUser,
           isError: false,
           message: USER_MESSAGES.USER_CREATION_SUCCESS,
         })
@@ -119,7 +169,20 @@ type SinginRequestType = FastifyRequest<{
 }>;
 const signin = async (req: SinginRequestType, reply: FastifyReply) => {
   try {
-    const { email } = req.body;
+    const {
+      email,
+      googleId,
+      name,
+      googleFirstName,
+      googleLastName,
+      profileImageUrl,
+      emailVerified,
+      accessToken,
+      tokenExpiresIn,
+      tokenIssuedAt,
+      tokenId,
+      tokenNotValidBefore,
+    } = req.body;
     const findUser = await UserModel.findOne({
       email,
       isDeleted: false,
@@ -129,13 +192,36 @@ const signin = async (req: SinginRequestType, reply: FastifyReply) => {
       condition: findUser && !findUser.isDeleted,
     });
     if (findUser && !findUser.isDeleted) {
+      const userId = String(findUser._id);
+      const { token, expiresAt } = generateToken({
+        userId,
+      });
       const updatedUser = await UserModel.findByIdAndUpdate(
-        findUser._id,
-        req.body,
+        userId,
+        {
+          email,
+          profileImageUrl,
+          googleMetadata: {
+            googleId,
+            name,
+            googleFirstName,
+            googleLastName,
+            emailVerified,
+            accessToken,
+            tokenExpiresIn,
+            tokenIssuedAt,
+            tokenId,
+            tokenNotValidBefore,
+          },
+          tokenDetails: {
+            token,
+            expiresAt,
+          },
+        },
         {
           new: true,
         }
-      ).select("-isDeleted");
+      ).select("-isDeleted -googleMetadata");
       if (updatedUser) {
         reply.status(200).send(
           response({

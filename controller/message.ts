@@ -214,12 +214,6 @@ const getMessage = async (req: GetMessageRequestType, reply: FastifyReply) => {
     }
   } catch (error) {
     console.log("errpr bicth", error);
-    reply.send(
-      response({
-        isError: true,
-        message: INTERNAL_SERVER_ERROR,
-      })
-    );
     sendSSE({
       data: null,
       message: INTERNAL_SERVER_ERROR,

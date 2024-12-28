@@ -14,4 +14,4 @@ declare module "fastify" {
   }
 }
 
-declare module "fastify-sse";
+declare module "jsonwebtoken";

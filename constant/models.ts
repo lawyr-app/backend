@@ -10,4 +10,5 @@ export const MODELS_TYPE = {
   Favourite: "Favourite",
   DeletedUser: "DeletedUser",
   Share: "Share",
+  Token: "Token",
 };

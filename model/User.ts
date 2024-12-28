@@ -1,5 +1,6 @@
 import { Schema, model } from "mongoose";
 import { MODELS_TYPE } from "../constant/models";
+const { ObjectId } = Schema.Types;
 
 const userSchema = new Schema(
   {
@@ -7,25 +8,28 @@ const userSchema = new Schema(
     username: String,
     social: String,
     isLawyer: Boolean,
-
+    email: String,
+    profileImageUrl: String,
     isDeleted: {
       type: Boolean,
       default: false,
     },
-
-    //we get it from google
-    googleId: String,
-    name: String,
-    googleFirstName: String,
-    googleLastName: String,
-    profileImageUrl: String,
-    email: String,
-    emailVerified: Boolean,
-    accessToken: String,
-    tokenExpiresIn: Number,
-    tokenIssuedAt: Number,
-    tokenId: String,
-    tokenNotValidBefore: Number,
+    tokenDetails: {
+      token: { type: String },
+      expiresAt: { type: Date },
+    },
+    googleMetadata: {
+      googleId: String,
+      name: String,
+      googleFirstName: String,
+      googleLastName: String,
+      emailVerified: Boolean,
+      accessToken: String,
+      tokenExpiresIn: Number,
+      tokenIssuedAt: Number,
+      tokenId: String,
+      tokenNotValidBefore: Number,
+    },
   },
   { timestamps: true }
 );
