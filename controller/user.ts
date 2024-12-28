@@ -3,8 +3,6 @@ import { UserModel } from "../model/User";
 import { response } from "../utils/response";
 import { INTERNAL_SERVER_ERROR, USER_MESSAGES } from "../constant/messages";
 import { DeletedUserModel } from "../model/DeletedUser";
-import jwt from "jsonwebtoken";
-import { JWT_SECRET } from "../constant/envvariables";
 import { generateToken } from "../utils/token";
 
 type userExistsRequestType = FastifyRequest<{
@@ -15,17 +13,42 @@ type userExistsRequestType = FastifyRequest<{
 const userExists = async (req: userExistsRequestType, reply: FastifyReply) => {
   try {
     const { email } = req.body;
-    const userExists = await UserModel.findOne({ email, isDeleted: false });
+    const userExists = await UserModel.findOne({
+      email,
+      isDeleted: false,
+    }).select("-isDeleted -googleMetadata");
     console.log("userExists", userExists);
-    return reply.status(200).send(
-      response({
-        data: !!userExists,
-        message: userExists
-          ? USER_MESSAGES.USER_EXISTS
-          : USER_MESSAGES.USER_DONT_EXISTS,
-        isError: false,
-      })
-    );
+    if (userExists?._id) {
+      const userId = String(userExists._id);
+      const { token, expiresAt } = generateToken({
+        userId,
+      });
+      const updatedUser = await UserModel.findByIdAndUpdate(
+        userId,
+        {
+          tokenDetails: {
+            token,
+            expiresAt,
+          },
+        },
+        { new: true }
+      );
+      return reply.status(200).send(
+        response({
+          data: updatedUser,
+          message: USER_MESSAGES.USER_EXISTS,
+          isError: false,
+        })
+      );
+    } else {
+      return reply.status(200).send(
+        response({
+          data: null,
+          message: USER_MESSAGES.USER_DONT_EXISTS,
+          isError: false,
+        })
+      );
+    }
   } catch (error) {
     return reply.status(500).send(
       response({
@@ -78,11 +101,11 @@ const signup = async (req: SingupRequestType, reply: FastifyReply) => {
     const userExists = await UserModel.findOne({
       email,
       isDeleted: false,
-    });
+    }).select("-isDeleted -googleMetadata");
     if (userExists) {
       return reply.status(409).send(
         response({
-          data: null,
+          data: userExists,
           message: USER_MESSAGES.USER_EXISTS,
           isError: false,
         })
@@ -122,7 +145,7 @@ const signup = async (req: SingupRequestType, reply: FastifyReply) => {
           },
         },
         { new: true }
-      );
+      ).select("-isDeleted -googleMetadata");
       reply.status(201).send(
         response({
           data: updatedUser,
@@ -268,7 +291,9 @@ type GetUserRequestType = FastifyRequest<{
 const getUser = async (req: GetUserRequestType, reply: FastifyReply) => {
   try {
     const { id } = req.params;
-    const user = await UserModel.findById(id).select("-isDeleted");
+    const user = await UserModel.findById(id).select(
+      "-isDeleted -googleMetadata"
+    );
     if (user) {
       reply.status(200).send(
         response({
@@ -312,7 +337,7 @@ const updateUser = async (req: UpdateUserRequestType, reply: FastifyReply) => {
         _id,
         { username },
         { new: true }
-      );
+      ).select("-isDeleted -googleMetadata");
       reply.status(200).send(
         response({
           data: updatedUser,
@@ -355,12 +380,14 @@ const deleteUser = async (req: DeleteUserRequestType, reply: FastifyReply) => {
         userId: _id,
         reason,
       });
-      const updatedUser = await user.updateOne(
-        {
-          isDeleted: true,
-        },
-        { new: true }
-      );
+      const updatedUser = await user
+        .updateOne(
+          {
+            isDeleted: true,
+          },
+          { new: true }
+        )
+        .select("-isDeleted -googleMetadata");
       if (deleted && updatedUser) {
         reply.status(200).send(
           response({
