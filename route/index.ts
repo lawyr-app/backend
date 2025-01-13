@@ -5,11 +5,12 @@ import userRoutes from "./user";
 import messageRoutes from "./message";
 import favouriteRoutes from "./favourite";
 import shareRoutes from "./share";
+import adminRoutes from "./admin";
 
 const registerRoutes = (fastify: FastifyInstance) => {
   fastify.get("/api/", (req, reply) => {
     reply.send({
-      message: "Hello",
+      message: "Bhokan bot",
     });
   });
   fastify.register(utilRoutes, { prefix: "/api/utils" });
@@ -18,6 +19,7 @@ const registerRoutes = (fastify: FastifyInstance) => {
   fastify.register(messageRoutes, { prefix: "/api/message" });
   fastify.register(favouriteRoutes, { prefix: "/api/favourite" });
   fastify.register(shareRoutes, { prefix: "/api/share" });
+  fastify.register(adminRoutes, { prefix: "/api/admin" });
 };
 
 export default registerRoutes;

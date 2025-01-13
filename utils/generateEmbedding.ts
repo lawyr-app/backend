@@ -1,27 +1,45 @@
 import axios from "axios";
-import { HUGGING_FACE_TOKEN } from "../constant/envvariables";
-const model_id = "sentence-transformers/all-MiniLM-L6-v2";
+import { GEMINI_API_KEY } from "../constant/envvariables";
 
-export const generateEmbeddings = async (text: string) => {
+const generateEmbeddings = async (text: string[]) => {
   try {
-    console.log("HUGGING_FACE_TOKEN", HUGGING_FACE_TOKEN);
-    const response = await axios.post(
-      `https://api-inference.huggingface.co/pipeline/feature-extraction/${model_id}`,
-      {
-        inputs: text,
-        options: { wait_for_model: true },
+    if (!GEMINI_API_KEY) {
+      throw new Error("GEMINI_API_KEY not found");
+    }
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=${GEMINI_API_KEY}`;
+
+    const parts = text.map((t) => ({ text: t }));
+
+    const data = {
+      model: "models/text-embedding-004",
+      content: {
+        parts,
       },
-      {
-        headers: {
-          Authorization: `Bearer ${HUGGING_FACE_TOKEN}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-    console.log("response", response?.data);
-    return response?.data;
+    };
+
+    const { data: response } = await axios.post(url, data, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    const array = response.embedding.values;
+    if (array.length > 0) {
+      return {
+        isError: false,
+        data: array,
+      };
+    } else {
+      return {
+        isError: true,
+        data: [],
+      };
+    }
   } catch (error) {
-    console.log("error in generateEmbeddings", error);
-    return [];
+    return {
+      isError: true,
+      data: [],
+    };
   }
 };
+
+export { generateEmbeddings };

@@ -5,26 +5,18 @@ const { ObjectId } = Schema.Types;
 const lawSchema = new Schema(
   {
     websiteUrl: String,
+    pdfUrl: String,
     actDate: String,
     actNumber: String,
     shortTitle: String,
-    pdfUrl: String,
-    isTrained: {
-      type: Boolean,
-      default: false,
-    },
+    seoTitle: String,
     error: String,
-    uniqueId: String,
+    rawText: String,
     regionId: {
       type: ObjectId,
       ref: "Region",
     },
-    embeddingsId: [
-      {
-        type: ObjectId,
-        ref: "Embedding",
-      },
-    ],
+    pineconeIds: [String],
   },
   { timestamps: true }
 );

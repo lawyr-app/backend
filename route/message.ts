@@ -28,6 +28,7 @@ const messageRoutes: FastifyPluginCallback = (
     preHandler: [authMiddleware],
     handler: getChatUserMessages,
   });
+  
   fastify.route({
     method: ["GET"],
     url: "/get/:id",
