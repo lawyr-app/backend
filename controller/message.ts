@@ -156,10 +156,20 @@ const getMessage = async (req: GetMessageRequestType, reply: FastifyReply) => {
         });
         return;
       }
-      const questionEmbeddings = await generateEmbeddings(question);
+      const { data, isError } = await generateEmbeddings([question]);
+      if (isError || data.length === 0) {
+        sendSSE({
+          data: null,
+          isError: true,
+          message: "NO_CONTEXT",
+          stopTheSSE: true,
+        });
+        return;
+      }
+      console.log("generateEmbeddings", data);
       const context = await getChatContext({
         nameSpace: "India",
-        questionEmbedding: questionEmbeddings,
+        questionEmbedding: data,
       });
       if (!context) {
         sendSSE({

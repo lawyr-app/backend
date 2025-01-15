@@ -144,6 +144,7 @@ const processRegion = async (req: processRegionReq, reply: FastifyReply) => {
         : `Successfull`;
     reply.send(response({ isError: false, message }));
   } catch (error) {
+    console.error("Something went wrong in processRegion due to ", error);
     reply.send(response({ isError: true, message: INTERNAL_SERVER_ERROR }));
   }
 };

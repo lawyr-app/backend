@@ -1,55 +1,12 @@
 import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { EmbeddingModel } from "../model/Embedding";
 import { getDataFromPineCone } from "../services/PineConeService";
-import { QueryResponse, RecordMetadata } from "@pinecone-database/pinecone";
+import { INTERNAL_SERVER_ERROR } from "../constant/messages";
+import { LawModel } from "../model/Law";
+import { getCleanedText } from "./cleanText";
 
 type commonProps = {
   questionEmbedding: [number];
   nameSpace: string;
-};
-
-const getEmbeddingIds = async ({
-  questionEmbedding,
-  nameSpace = "India",
-}: commonProps) => {
-  try {
-    const results: QueryResponse<RecordMetadata> | never[] =
-      await getDataFromPineCone({
-        embeddings: questionEmbedding,
-        namespace: nameSpace,
-      });
-    if (results && "matches" in results && results.matches.length > 0) {
-      const embeddingIds = results.matches.map((m) => {
-        const id = m?.metadata?.embeddingId;
-        if (id) {
-          return id;
-        }
-      });
-      return embeddingIds[0] ?? [];
-    }
-
-    return [];
-  } catch (error) {
-    console.error(`Something went wrong in getEmbeddingIds due to `, error);
-    return [];
-  }
-};
-
-const findSimilarLaws = async ({
-  questionEmbedding,
-  nameSpace = "India",
-}: commonProps) => {
-  try {
-    const embeddingIds = await getEmbeddingIds({
-      questionEmbedding,
-      nameSpace,
-    });
-    const results = await EmbeddingModel.find({ _id: { $in: embeddingIds } });
-    return results;
-  } catch (error) {
-    console.error("findSimilarLaws", error);
-    return [];
-  }
 };
 
 const lawPromptTemplate = ChatPromptTemplate.fromTemplate(`
@@ -63,17 +20,62 @@ Please provide a concise answer and cite specific information from the legal doc
 Answer:
 `);
 
+const CONSTITUTION_NAMESPACE = "67806ffbeda08a849e48cab3";
+const INDIA_NAMESPACE = "67806ffbeda08a849e48cab2";
+const DEFAULT_NAMESPACE = [CONSTITUTION_NAMESPACE, INDIA_NAMESPACE];
+
+type getLawIdsFromPineConeProps = {
+  questionEmbedding: [number];
+  nameSpace: string;
+};
+const getLawIdsFromPineCone = async ({
+  questionEmbedding,
+  nameSpace,
+}: getLawIdsFromPineConeProps) => {
+  try {
+    const namespaces = nameSpace
+      ? DEFAULT_NAMESPACE
+      : [...DEFAULT_NAMESPACE, nameSpace];
+    let combinedResults: any = [];
+    for (const ns of namespaces) {
+      const queryResponse = await getDataFromPineCone({
+        namespace: ns,
+        embeddings: questionEmbedding,
+      });
+      const arrayResponse = queryResponse?.matches;
+      combinedResults = [...combinedResults, ...arrayResponse];
+    }
+    console.log("combinedResults", combinedResults);
+    const onlyLawIds = combinedResults.map((m) => m.metadata.lawId);
+    const uniqueLawIds = [...new Set(onlyLawIds)];
+    return uniqueLawIds;
+  } catch (error) {
+    return {
+      isError: true,
+      data: null,
+      message: INTERNAL_SERVER_ERROR,
+    };
+  }
+};
+
 const getChatContext = async ({
   questionEmbedding,
-  nameSpace = "India",
+  nameSpace,
 }: commonProps) => {
   try {
-    const similarDocuments = await findSimilarLaws({
+    const lawIds = await getLawIdsFromPineCone({
       questionEmbedding,
       nameSpace,
     });
-    const context = similarDocuments
-      ?.map((doc) => ` Content: ${doc?.content}`)
+
+    const uniqueLawIds = [...new Set(lawIds)];
+
+    const laws = await LawModel.find({
+      _id: { $in: uniqueLawIds },
+    });
+
+    const context = laws
+      ?.map((doc) => ` Content: ${getCleanedText(String(doc?.rawText))}`)
       .join("\n\n");
     return context;
   } catch (error) {

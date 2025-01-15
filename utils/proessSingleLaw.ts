@@ -42,10 +42,6 @@ const generateAndSave = async ({ text, lawId }: generateAndSaveProps) => {
       });
     }
 
-    law.updateOne({
-      rawText: text,
-    });
-
     const cleanedText = getCleanedText(text);
     const textSplitter = new RecursiveCharacterTextSplitter({
       chunkSize: 2000,
@@ -92,11 +88,9 @@ const generateAndSave = async ({ text, lawId }: generateAndSaveProps) => {
         pineconeIds.push(id);
         index++;
       }
-
-      console.log("pineconeIds", pineconeIds);
-
       await law.updateOne({
         pineconeIds,
+        rawText: text,
       });
 
       return response({
