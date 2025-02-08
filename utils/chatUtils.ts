@@ -10,15 +10,26 @@ type commonProps = {
 };
 
 const lawPromptTemplate = ChatPromptTemplate.fromTemplate(`
-Answer the question based only on the following context:
-{context}
+  **Answer the question based only on the following context like a lawyer:**
 
-Question: {question}
+  {context}
 
-Please provide a concise answer and cite specific information from the legal documents when possible.If the answer cannot be found in the context, say "I cannot find information about this in the provided legal documents"Answer should be in markdown.Also if possible use points to make the answer consise....Dont elaborate much.Keep it simple like the user is just 16 years old"
+  **Question:** {question}
 
-Answer:
-`);
+  ---
+
+  **Answer:**
+
+  - Provide a comprehensive response that includes all relevant details available in the context.
+  - Cite specific information from the legal documents where possible.
+  - If the answer cannot be found in the context, respond with:
+    *"I cannot find information about this in the provided legal documents."*
+  - Format the response in **Markdown**.
+  - Use **bold text** for headers or key points.
+  - Separate paragraphs with a blank line for better readability.
+  - Ensure no relevant information from the context is omitted in the response.
+  ---
+  `);
 
 const CONSTITUTION_NAMESPACE = "67806ffbeda08a849e48cab3";
 const INDIA_NAMESPACE = "67806ffbeda08a849e48cab2";
@@ -48,11 +59,15 @@ const getLawIdsFromPineCone = async ({
     console.log("combinedResults", combinedResults);
     const onlyLawIds = combinedResults.map((m) => m.metadata.lawId);
     const uniqueLawIds = [...new Set(onlyLawIds)];
-    return uniqueLawIds;
+    return {
+      isError: false,
+      data: uniqueLawIds,
+      message: "SUCCESS",
+    };
   } catch (error) {
     return {
       isError: true,
-      data: null,
+      data: [],
       message: INTERNAL_SERVER_ERROR,
     };
   }
@@ -63,12 +78,17 @@ const getChatContext = async ({
   nameSpace,
 }: commonProps) => {
   try {
-    const lawIds = await getLawIdsFromPineCone({
+    const { data } = await getLawIdsFromPineCone({
       questionEmbedding,
       nameSpace,
     });
 
-    const uniqueLawIds = [...new Set(lawIds)];
+    if (data.length === 0) {
+      console.error("returning null as context");
+      return null;
+    }
+
+    const uniqueLawIds = [...new Set(data)];
 
     const laws = await LawModel.find({
       _id: { $in: uniqueLawIds },

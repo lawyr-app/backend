@@ -8,7 +8,7 @@ import { FavouriteModel } from "../model/Favourite";
 type InitiateChatRequestType = FastifyRequest<{
   Body: {
     question: string;
-    chatId: string;
+    regionId: string;
   };
 }>;
 const initiateChat = async (
@@ -17,10 +17,11 @@ const initiateChat = async (
 ) => {
   try {
     const { _id } = req.user;
-    const { question } = req.body;
+    const { question, regionId } = req.body;
     const savedChat = await ChatModel.create({
       firstQuestion: question,
       createdBy: _id,
+      regionId,
     });
     if (savedChat) {
       reply.send(

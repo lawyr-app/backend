@@ -12,6 +12,6 @@ export const response = ({
   return {
     data,
     isError,
-    message: isError ? message : "Success",
+    message,
   };
 };

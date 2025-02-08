@@ -35,6 +35,7 @@ const generateEmbeddings = async (text: string[]) => {
       };
     }
   } catch (error) {
+    console.log("error", error);
     return {
       isError: true,
       data: [],

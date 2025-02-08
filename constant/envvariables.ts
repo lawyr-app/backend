@@ -7,6 +7,7 @@ const PORT_NUMBER = process.env.PORT ? +process.env.PORT : 7000;
 const HUGGING_FACE_TOKEN = process.env.HF_TOKEN;
 const PINECONE = process.env.PINECONE;
 const JWT_SECRET = process.env.JWT_SECRET;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 export {
   GROQ_API_KEY,
@@ -16,4 +17,5 @@ export {
   PINECONE,
   GEMINI_API_KEY,
   JWT_SECRET,
+  OPENAI_API_KEY
 };

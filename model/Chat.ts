@@ -17,6 +17,10 @@ const chatSchema = new Schema(
       type: ObjectId,
       ref: MODELS_TYPE.Share,
     },
+    regionId: {
+      type: ObjectId,
+      ref: MODELS_TYPE.Region,
+    },
   },
   { timestamps: true }
 );

@@ -6,7 +6,11 @@ import { generateEmbeddings } from "../utils/generateEmbedding";
 import { getChatContext, lawPromptTemplate } from "../utils/chatUtils";
 import { ChatGroq } from "@langchain/groq";
 import { StringOutputParser } from "@langchain/core/output_parsers";
-import { GROQ_API_KEY, GEMINI_API_KEY } from "../constant/envvariables";
+import {
+  GROQ_API_KEY,
+  GEMINI_API_KEY,
+  OPENAI_API_KEY,
+} from "../constant/envvariables";
 import { INTERNAL_SERVER_ERROR } from "../constant/messages";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 
@@ -157,6 +161,7 @@ const getMessage = async (req: GetMessageRequestType, reply: FastifyReply) => {
         return;
       }
       const { data, isError } = await generateEmbeddings([question]);
+      console.log("generateEmbeddings data", data);
       if (isError || data.length === 0) {
         sendSSE({
           data: null,
@@ -171,6 +176,7 @@ const getMessage = async (req: GetMessageRequestType, reply: FastifyReply) => {
         nameSpace: "India",
         questionEmbedding: data,
       });
+      console.log("context", context);
       if (!context) {
         sendSSE({
           data: null,
