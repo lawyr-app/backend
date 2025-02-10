@@ -5,11 +5,17 @@ import {
 } from "fastify";
 import { authMiddleware } from "../prehandlers/user";
 import {
+  getChats,
+  getDeletedUsers,
+  getMessages,
   getRegions,
+  getShares,
+  getUsers,
   processLaw,
   processRegion,
   scrapRegionLaws,
   seedRegions,
+  getFavourites,
 } from "../controller/admin";
 
 const adminRoutes: FastifyPluginCallback = (
@@ -50,6 +56,46 @@ const adminRoutes: FastifyPluginCallback = (
     url: "/process-region/:regionId",
     // preHandler: [authMiddleware],
     handler: processRegion,
+  });
+
+  fastify.route({
+    method: ["GET"],
+    url: "/get-users",
+    // preHandler: [authMiddleware],
+    handler: getUsers,
+  });
+
+  fastify.route({
+    method: ["GET"],
+    url: "/get-deleted-users",
+    // preHandler: [authMiddleware],
+    handler: getDeletedUsers,
+  });
+
+  fastify.route({
+    method: ["GET"],
+    url: "/get-shares",
+    // preHandler: [authMiddleware],
+    handler: getShares,
+  });
+
+  fastify.route({
+    method: ["GET"],
+    url: "/get-chats",
+    // preHandler: [authMiddleware],
+    handler: getChats,
+  });
+  fastify.route({
+    method: ["GET"],
+    url: "/get-messages",
+    // preHandler: [authMiddleware],
+    handler: getMessages,
+  });
+  fastify.route({
+    method: ["GET"],
+    url: "/get-favourites",
+    // preHandler: [authMiddleware],
+    handler: getFavourites,
   });
 
   done();

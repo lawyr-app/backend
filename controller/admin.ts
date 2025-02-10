@@ -6,6 +6,12 @@ import { RegionsModel } from "../model/Regions";
 import { LawModel } from "../model/Law";
 import { ADMIN_MESSAGES, INTERNAL_SERVER_ERROR } from "../constant/messages";
 import { processSingleLaw } from "../utils/proessSingleLaw";
+import { UserModel } from "../model/User";
+import { ShareModel } from "../model/Share";
+import { FavouriteModel } from "../model/Favourite";
+import { DeletedUserModel } from "../model/DeletedUser";
+import { ChatModel } from "../model/Chat";
+import { MessageModel } from "../model/Message";
 
 type seedRegionsReq = FastifyRequest<{}>;
 const seedRegions = async (req: seedRegionsReq, reply: FastifyReply) => {
@@ -149,4 +155,201 @@ const processRegion = async (req: processRegionReq, reply: FastifyReply) => {
   }
 };
 
-export { seedRegions, scrapRegionLaws, getRegions, processLaw, processRegion };
+type getUsersReq = FastifyRequest<{
+  Querystring: {
+    skip: number;
+    limit: number;
+    search: string;
+  };
+}>;
+const getUsers = async (req: getUsersReq, reply: FastifyReply) => {
+  try {
+    const { skip, limit, search } = req.query;
+    const users = await UserModel.find({
+      ...(search && { username: { $regex: search, $options: "i" } }),
+    })
+      .skip(+skip)
+      .limit(+limit);
+
+    reply.send(
+      response({
+        data: users,
+        isError: false,
+        message: ADMIN_MESSAGES.FETCHED_USERS_SUCCESSFULLY,
+      })
+    );
+  } catch (error) {
+    console.error("Something went wrong in getUsers due to ", error);
+    reply.send(response({ isError: true, message: INTERNAL_SERVER_ERROR }));
+  }
+};
+
+type getSharesReq = FastifyRequest<{
+  Querystring: {
+    skip: number;
+    limit: number;
+    search: string;
+  };
+}>;
+const getShares = async (req: getSharesReq, reply: FastifyReply) => {
+  try {
+    const { skip, limit, search } = req.query;
+    const shares = await ShareModel.find({
+      ...(search && { title: { $regex: search, $options: "i" } }),
+    })
+      .skip(+skip)
+      .limit(+limit);
+    reply.send(
+      response({
+        data: shares,
+        isError: false,
+        message: ADMIN_MESSAGES.FETCHED_SHARES_SUCCESSFULLY,
+      })
+    );
+  } catch (error) {
+    console.error("Something went wrong in getShares due to ", error);
+    reply.send(response({ isError: true, message: INTERNAL_SERVER_ERROR }));
+  }
+};
+
+type getFavouritesReq = FastifyRequest<{
+  Querystring: {
+    skip: number;
+    limit: number;
+    search: string;
+  };
+}>;
+const getFavourites = async (req: getFavouritesReq, reply: FastifyReply) => {
+  try {
+    const { skip, limit, search } = req.query;
+    const favourites = await FavouriteModel.find({
+      ...(search && { title: { $regex: search, $options: "i" } }),
+    })
+      .skip(+skip)
+      .limit(+limit);
+    reply.send(
+      response({
+        data: favourites,
+        isError: false,
+        message: ADMIN_MESSAGES.FETCHED_FAVOURITES_SUCCESSFULLY,
+      })
+    );
+  } catch (error) {
+    console.error("Something went wrong in getFavourites due to ", error);
+    reply.send(response({ isError: true, message: INTERNAL_SERVER_ERROR }));
+  }
+};
+
+type getDeletedUsersReq = FastifyRequest<{
+  Querystring: {
+    skip: number;
+    limit: number;
+    search: string;
+  };
+}>;
+const getDeletedUsers = async (
+  req: getDeletedUsersReq,
+  reply: FastifyReply
+) => {
+  try {
+    const { skip, limit, search } = req.query;
+    const searchQuery = search
+      ? {
+          $or: [
+            { username: { $regex: search, $options: "i" } },
+            { email: { $regex: search, $options: "i" } },
+          ],
+        }
+      : {};
+    const deletedUsers = await DeletedUserModel.find(searchQuery)
+      .skip(+skip)
+      .limit(+limit)
+      .populate({
+        path: "userId",
+        match: searchQuery,
+      });
+    const filteredDeletedUsers = deletedUsers.filter(
+      (deletedUser) => deletedUser.userId
+    );
+    reply.send(
+      response({
+        data: filteredDeletedUsers,
+        isError: false,
+        message: ADMIN_MESSAGES.FETCHED_DELETED_USERS_SUCCESSFULLY,
+      })
+    );
+  } catch (error) {
+    console.error("Something went wrong in getDeletedUsers due to ", error);
+    reply.send(response({ isError: true, message: INTERNAL_SERVER_ERROR }));
+  }
+};
+
+type getChatsReq = FastifyRequest<{
+  Querystring: {
+    skip: number;
+    limit: number;
+    search: string;
+  };
+}>;
+const getChats = async (req: getChatsReq, reply: FastifyReply) => {
+  try {
+    const { skip, limit, search } = req.query;
+    const chats = await ChatModel.find({
+      ...(search && { firstQuestion: { $regex: search, $options: "i" } }),
+    })
+      .skip(+skip)
+      .limit(+limit);
+    reply.send(
+      response({
+        data: chats,
+        isError: false,
+        message: ADMIN_MESSAGES.FETCHED_CHATS_SUCCESSFULLY,
+      })
+    );
+  } catch (error) {
+    console.error("Something went wrong in getChats due to ", error);
+    reply.send(response({ isError: true, message: INTERNAL_SERVER_ERROR }));
+  }
+};
+
+type getMessagesReq = FastifyRequest<{
+  Querystring: {
+    skip: number;
+    limit: number;
+    search: string;
+  };
+}>;
+const getMessages = async (req: getMessagesReq, reply: FastifyReply) => {
+  try {
+    const { skip, limit, search } = req.query;
+    const messages = await MessageModel.find({
+      ...(search && { question: { $regex: search, $options: "i" } }),
+    })
+      .skip(+skip)
+      .limit(+limit);
+    reply.send(
+      response({
+        data: messages,
+        isError: false,
+        message: ADMIN_MESSAGES.FETCHED_MESSAGES_SUCCESSFULLY,
+      })
+    );
+  } catch (error) {
+    console.error("Something went wrong in getMessages due to ", error);
+    reply.send(response({ isError: true, message: INTERNAL_SERVER_ERROR }));
+  }
+};
+
+export {
+  seedRegions,
+  scrapRegionLaws,
+  getRegions,
+  processLaw,
+  processRegion,
+  getUsers,
+  getShares,
+  getFavourites,
+  getDeletedUsers,
+  getChats,
+  getMessages,
+};
