@@ -94,12 +94,60 @@ const scrapRegionLaws = async (
   }
 };
 
-type getRegionsReq = FastifyRequest<{}>;
+const getRegionProcessStatus = async ({ regions }) => {
+  try {
+    return await Promise.all(
+      regions.map(async (m) => {
+        const laws = await LawModel.find({ regionId: m._id });
+        console.log("laws", laws);
+
+        const totalLaws = laws.length;
+        const processedLaws = laws.filter(
+          (f) => f.pineconeIds.length > 0
+        ).length;
+
+        return {
+          ...m.toObject(),
+          totalLaws,
+          processedLaws,
+        };
+      })
+    );
+  } catch (error) {
+    console.error("getRegionProcessStatus", error);
+    return [];
+  }
+};
+
+type getRegionsReq = FastifyRequest<{
+  Querystring: {
+    needProcessStatus: boolean;
+  };
+}>;
 const getRegions = async (req: getRegionsReq, reply: FastifyReply) => {
   try {
+    const { needProcessStatus } = req.query;
     const regions = await RegionsModel.find();
-    reply.send(response({ data: regions, isError: false }));
+    if (needProcessStatus) {
+      const processed = await getRegionProcessStatus({ regions });
+      reply.send(
+        response({
+          data: processed,
+          isError: false,
+          message: ADMIN_MESSAGES.FETCHED_REGIONS_SUCCESSFULLY,
+        })
+      );
+    } else {
+      reply.send(
+        response({
+          data: regions,
+          isError: false,
+          message: ADMIN_MESSAGES.FETCHED_REGIONS_SUCCESSFULLY,
+        })
+      );
+    }
   } catch (error) {
+    console.error("getRegions", error);
     reply.send(response({ isError: true, message: INTERNAL_SERVER_ERROR }));
   }
 };
