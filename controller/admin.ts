@@ -4,7 +4,11 @@ import { regions, RegionType } from "../constant/regions";
 import { scrapTheConstitution, scrapTheLaws } from "../utils/scrap";
 import { RegionsModel } from "../model/Regions";
 import { LawModel } from "../model/Law";
-import { ADMIN_MESSAGES, INTERNAL_SERVER_ERROR } from "../constant/messages";
+import {
+  ADMIN_MESSAGES,
+  INTERNAL_SERVER_ERROR,
+  USER_MESSAGES,
+} from "../constant/messages";
 import { processSingleLaw } from "../utils/proessSingleLaw";
 import { UserModel } from "../model/User";
 import { ShareModel } from "../model/Share";
@@ -12,6 +16,7 @@ import { FavouriteModel } from "../model/Favourite";
 import { DeletedUserModel } from "../model/DeletedUser";
 import { ChatModel } from "../model/Chat";
 import { MessageModel } from "../model/Message";
+import { HydratedDocument, InferSchemaType } from "mongoose";
 
 type seedRegionsReq = FastifyRequest<{}>;
 const seedRegions = async (req: seedRegionsReq, reply: FastifyReply) => {
@@ -94,7 +99,11 @@ const scrapRegionLaws = async (
   }
 };
 
-const getRegionProcessStatus = async ({ regions }) => {
+const getRegionProcessStatus = async ({
+  regions,
+}: {
+  regions: HydratedDocument<typeof RegionsModel.schema>[];
+}) => {
   try {
     return await Promise.all(
       regions.map(async (m) => {
@@ -107,7 +116,7 @@ const getRegionProcessStatus = async ({ regions }) => {
         ).length;
 
         return {
-          ...m.toObject(),
+          ...m?.toObject(),
           totalLaws,
           processedLaws,
         };
@@ -388,6 +397,84 @@ const getMessages = async (req: getMessagesReq, reply: FastifyReply) => {
   }
 };
 
+type GetUserRequestType = FastifyRequest<{
+  Params: {
+    userId: String;
+  };
+}>;
+const getUser = async (req: GetUserRequestType, reply: FastifyReply) => {
+  try {
+    const { userId } = req.params;
+    const user = await UserModel.findById(userId);
+    if (user) {
+      reply.status(200).send(
+        response({
+          data: user,
+          isError: false,
+          message: USER_MESSAGES.USER_FETCHED_SUCCESSFULLY,
+        })
+      );
+    } else {
+      reply.status(400).send(
+        response({
+          data: null,
+          isError: true,
+          message: USER_MESSAGES.USER_DONT_EXISTS,
+        })
+      );
+    }
+  } catch (error) {
+    console.error(`Something went wrong in getUser due to `, error);
+    return reply.status(500).send(
+      response({
+        isError: true,
+        message: INTERNAL_SERVER_ERROR,
+      })
+    );
+  }
+};
+
+type UpdateUserRequestType = FastifyRequest<{
+  Body: typeof UserModel;
+  Params: {
+    userId: string;
+  };
+}>;
+const updateUser = async (req: UpdateUserRequestType, reply: FastifyReply) => {
+  try {
+    const { userId } = req.params;
+    const user = await UserModel.findById(userId);
+    if (user) {
+      const updatedUser = await UserModel.findByIdAndUpdate(userId, req.body, {
+        new: true,
+      });
+      reply.status(200).send(
+        response({
+          data: updatedUser,
+          isError: false,
+          message: USER_MESSAGES.USER_FETCHED_SUCCESSFULLY,
+        })
+      );
+    } else {
+      reply.status(400).send(
+        response({
+          data: null,
+          isError: true,
+          message: USER_MESSAGES.USER_UPDATING_FAILURE,
+        })
+      );
+    }
+  } catch (error) {
+    console.error(`Something went wrong in updateUser due to `, error);
+    return reply.status(500).send(
+      response({
+        isError: true,
+        message: INTERNAL_SERVER_ERROR,
+      })
+    );
+  }
+};
+
 export {
   seedRegions,
   scrapRegionLaws,
@@ -400,4 +487,6 @@ export {
   getDeletedUsers,
   getChats,
   getMessages,
+  getUser,
+  updateUser,
 };

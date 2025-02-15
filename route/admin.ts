@@ -16,6 +16,8 @@ import {
   scrapRegionLaws,
   seedRegions,
   getFavourites,
+  getUser,
+  updateUser,
 } from "../controller/admin";
 
 const adminRoutes: FastifyPluginCallback = (
@@ -26,7 +28,7 @@ const adminRoutes: FastifyPluginCallback = (
   fastify.route({
     method: ["GET"],
     url: "/seed-regions",
-    preHandler: [authMiddleware],
+    // preHandler: [authMiddleware],
     handler: seedRegions,
   });
 
@@ -96,6 +98,20 @@ const adminRoutes: FastifyPluginCallback = (
     url: "/get-favourites",
     // preHandler: [authMiddleware],
     handler: getFavourites,
+  });
+
+  fastify.route({
+    method: ["GET"],
+    url: "/get-user/:userId",
+    // preHandler: [authMiddleware],
+    handler: getUser,
+  });
+
+  fastify.route({
+    method: ["PUT"],
+    url: "/update-user/:userId",
+    // preHandler: [authMiddleware],
+    handler: updateUser,
   });
 
   done();
