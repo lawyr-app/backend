@@ -5,20 +5,30 @@ import {
 } from "fastify";
 import { authMiddleware } from "../prehandlers/user";
 import {
+  processLaw,
+  processRegion,
+  scrapRegionLaws,
+  seedRegions,
+  updateUser,
+} from "../controller/admin";
+import {
+  getFavourites,
+  getUser,
   getChats,
   getDeletedUsers,
   getMessages,
   getRegions,
   getShares,
   getUsers,
-  processLaw,
-  processRegion,
-  scrapRegionLaws,
-  seedRegions,
-  getFavourites,
-  getUser,
-  updateUser,
-} from "../controller/admin";
+} from "../controller/admin/get";
+import {
+  deleteFavourite,
+  deleteRegion,
+  deleteMessage,
+  deleteLaw,
+  deleteChat,
+  deleteShare,
+} from "../controller/admin/delete";
 
 const adminRoutes: FastifyPluginCallback = (
   fastify: FastifyInstance,
@@ -30,13 +40,6 @@ const adminRoutes: FastifyPluginCallback = (
     url: "/seed-regions",
     // preHandler: [authMiddleware],
     handler: seedRegions,
-  });
-
-  fastify.route({
-    method: ["GET"],
-    url: "/get-regions",
-    // preHandler: [authMiddleware],
-    handler: getRegions,
   });
 
   fastify.route({
@@ -60,61 +63,112 @@ const adminRoutes: FastifyPluginCallback = (
     handler: processRegion,
   });
 
-  fastify.route({
-    method: ["GET"],
-    url: "/get-users",
-    // preHandler: [authMiddleware],
-    handler: getUsers,
-  });
-
-  fastify.route({
-    method: ["GET"],
-    url: "/get-deleted-users",
-    // preHandler: [authMiddleware],
-    handler: getDeletedUsers,
-  });
-
-  fastify.route({
-    method: ["GET"],
-    url: "/get-shares",
-    // preHandler: [authMiddleware],
-    handler: getShares,
-  });
-
-  fastify.route({
-    method: ["GET"],
-    url: "/get-chats",
-    // preHandler: [authMiddleware],
-    handler: getChats,
-  });
-  fastify.route({
-    method: ["GET"],
-    url: "/get-messages",
-    // preHandler: [authMiddleware],
-    handler: getMessages,
-  });
-  fastify.route({
-    method: ["GET"],
-    url: "/get-favourites",
-    // preHandler: [authMiddleware],
-    handler: getFavourites,
-  });
-
-  fastify.route({
-    method: ["GET"],
-    url: "/get-user/:userId",
-    // preHandler: [authMiddleware],
-    handler: getUser,
-  });
-
-  fastify.route({
-    method: ["PUT"],
-    url: "/update-user/:userId",
-    // preHandler: [authMiddleware],
-    handler: updateUser,
-  });
+  fastify.register(deleteRoutes, { prefix: "/api/admin/delete" });
+  fastify.register(updateRoutes, { prefix: "/api/admin/update" });
+  fastify.register(getRoutes, { prefix: "/api/admin/get" });
 
   done();
 };
 
 export default adminRoutes;
+
+const deleteRoutes: FastifyPluginCallback = async (
+  fastify: FastifyInstance,
+  options: FastifyPluginOptions,
+  done
+) => {
+  fastify.route({
+    method: ["DELETE"],
+    url: "/favourite/:id",
+    handler: deleteFavourite,
+  });
+  fastify.route({
+    method: ["DELETE"],
+    url: "/share/:id",
+    handler: deleteShare,
+  });
+  fastify.route({
+    method: ["DELETE"],
+    url: "/chat/:id",
+    handler: deleteChat,
+  });
+  fastify.route({
+    method: ["DELETE"],
+    url: "/law/:id",
+    handler: deleteLaw,
+  });
+  fastify.route({
+    method: ["DELETE"],
+    url: "/message/:id",
+    handler: deleteMessage,
+  });
+  fastify.route({
+    method: ["DELETE"],
+    url: "/region/:id",
+    handler: deleteRegion,
+  });
+  done();
+};
+
+const getRoutes: FastifyPluginCallback = async (
+  fastify: FastifyInstance,
+  options: FastifyPluginOptions,
+  done
+) => {
+  fastify.route({
+    method: ["GET"],
+    url: "/user/:userId",
+    handler: getUser,
+  });
+  fastify.route({
+    method: ["GET"],
+    url: "/regions",
+    handler: getRegions,
+  });
+  fastify.route({
+    method: ["GET"],
+    url: "/users",
+    handler: getUsers,
+  });
+  fastify.route({
+    method: ["GET"],
+    url: "/shares",
+    handler: getShares,
+  });
+  fastify.route({
+    method: ["GET"],
+    url: "/favourites",
+    handler: getFavourites,
+  });
+  fastify.route({
+    method: ["GET"],
+    url: "/deleteusers",
+    handler: getDeletedUsers,
+  });
+  fastify.route({
+    method: ["GET"],
+    url: "/chats",
+    handler: getChats,
+  });
+  fastify.route({
+    method: ["GET"],
+    url: "/messages",
+    handler: getMessages,
+  });
+
+  done();
+};
+
+const updateRoutes: FastifyPluginCallback = async (
+  fastify: FastifyInstance,
+  options: FastifyPluginOptions,
+  done
+) => {
+  fastify.route({
+    method: ["PUT"],
+    url: "/user/:userId",
+    handler: updateUser,
+  });
+
+  done();
+};
