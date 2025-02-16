@@ -1,9 +1,48 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { response } from "../../utils/response";
-import { INTERNAL_SERVER_ERROR } from "../../constant/messages";
+import {
+  ADMIN_MESSAGES,
+  CHAT_MESSAGES,
+  FAVOURITE_MESSAGES,
+  INTERNAL_SERVER_ERROR,
+  MESSAGE_MESSAGES,
+  SHARE_MESSAGES,
+} from "../../constant/messages";
+import { FavouriteModel } from "../../model/Favourite";
+import { ShareModel } from "../../model/Share";
+import { ChatModel } from "../../model/Chat";
+import { MessageModel } from "../../model/Message";
+import { LawModel } from "../../model/Law";
+import { RegionsModel } from "../../model/Regions";
 
-const deleteFavourite = async (req: FastifyRequest, reply: FastifyReply) => {
+type DeleteFavouriteReq = FastifyRequest<{
+  Params: {
+    id: String;
+  };
+}>;
+const deleteFavourite = async (
+  req: DeleteFavouriteReq,
+  reply: FastifyReply
+) => {
   try {
+    const { id } = req.params;
+    const favourites = await FavouriteModel.findByIdAndDelete(id);
+    if (favourites) {
+      return reply.status(200).send(
+        response({
+          data: favourites,
+          isError: false,
+          message: FAVOURITE_MESSAGES.FAVOURITE_DELETION_SUCCESS,
+        })
+      );
+    } else {
+      return reply.status(400).send(
+        response({
+          isError: true,
+          message: FAVOURITE_MESSAGES.FAVOURITE_DELETION_FAILURE,
+        })
+      );
+    }
   } catch (error) {
     console.error(`Something went wrong in deleteFavourite due to `, error);
     return reply.status(500).send(
@@ -15,8 +54,31 @@ const deleteFavourite = async (req: FastifyRequest, reply: FastifyReply) => {
   }
 };
 
-const deleteShare = async (req: FastifyRequest, reply: FastifyReply) => {
+type DeleteShareReq = FastifyRequest<{
+  Params: {
+    id: String;
+  };
+}>;
+const deleteShare = async (req: DeleteShareReq, reply: FastifyReply) => {
   try {
+    const { id } = req.params;
+    const share = await ShareModel.findByIdAndDelete(id);
+    if (share) {
+      return reply.status(200).send(
+        response({
+          data: share,
+          isError: false,
+          message: SHARE_MESSAGES.SHARING_DELETED_SUCCESSFULLY,
+        })
+      );
+    } else {
+      return reply.status(400).send(
+        response({
+          isError: true,
+          message: SHARE_MESSAGES.FAILED_TO_DELETE_SHARING,
+        })
+      );
+    }
   } catch (error) {
     console.error(`Something went wrong in deleteShare due to `, error);
     return reply.status(500).send(
@@ -28,8 +90,31 @@ const deleteShare = async (req: FastifyRequest, reply: FastifyReply) => {
   }
 };
 
-const deleteChat = async (req: FastifyRequest, reply: FastifyReply) => {
+type DeleteChatReq = FastifyRequest<{
+  Params: {
+    id: String;
+  };
+}>;
+const deleteChat = async (req: DeleteChatReq, reply: FastifyReply) => {
   try {
+    const { id } = req.params;
+    const chat = await ChatModel.findByIdAndDelete(id);
+    if (chat) {
+      return reply.status(200).send(
+        response({
+          data: chat,
+          isError: false,
+          message: CHAT_MESSAGES.CHAT_DELETION_SUCCESS,
+        })
+      );
+    } else {
+      return reply.status(400).send(
+        response({
+          isError: true,
+          message: CHAT_MESSAGES.CHAT_DELETION_FAILED,
+        })
+      );
+    }
   } catch (error) {
     console.error(`Something went wrong in deleteChat due to `, error);
     return reply.status(500).send(
@@ -41,8 +126,31 @@ const deleteChat = async (req: FastifyRequest, reply: FastifyReply) => {
   }
 };
 
-const deleteMessage = async (req: FastifyRequest, reply: FastifyReply) => {
+type DeleteMessageReq = FastifyRequest<{
+  Params: {
+    id: String;
+  };
+}>;
+const deleteMessage = async (req: DeleteMessageReq, reply: FastifyReply) => {
   try {
+    const { id } = req.params;
+    const message = await MessageModel.findByIdAndDelete(id);
+    if (message) {
+      return reply.status(200).send(
+        response({
+          data: message,
+          isError: false,
+          message: MESSAGE_MESSAGES.MESSAGE_DELETED_SUCCESSFULLY,
+        })
+      );
+    } else {
+      return reply.status(400).send(
+        response({
+          isError: true,
+          message: MESSAGE_MESSAGES.MESSAGE_DELETION_FAILURE,
+        })
+      );
+    }
   } catch (error) {
     console.error(`Something went wrong in deleteMessage due to `, error);
     return reply.status(500).send(
@@ -54,8 +162,31 @@ const deleteMessage = async (req: FastifyRequest, reply: FastifyReply) => {
   }
 };
 
-const deleteLaw = async (req: FastifyRequest, reply: FastifyReply) => {
+type DeleteLawReq = FastifyRequest<{
+  Params: {
+    id: String;
+  };
+}>;
+const deleteLaw = async (req: DeleteLawReq, reply: FastifyReply) => {
   try {
+    const { id } = req.params;
+    const law = await LawModel.findByIdAndDelete(id);
+    if (law) {
+      return reply.status(200).send(
+        response({
+          data: law,
+          isError: false,
+          message: ADMIN_MESSAGES.LAW_DELETED_SUCCESSFULLY,
+        })
+      );
+    } else {
+      return reply.status(400).send(
+        response({
+          isError: true,
+          message: ADMIN_MESSAGES.FAILED_TO_DELETE_LAW,
+        })
+      );
+    }
   } catch (error) {
     console.error(`Something went wrong in deleteLaw due to `, error);
     return reply.status(500).send(
@@ -67,8 +198,31 @@ const deleteLaw = async (req: FastifyRequest, reply: FastifyReply) => {
   }
 };
 
-const deleteRegion = async (req: FastifyRequest, reply: FastifyReply) => {
+type DeleteRegionReq = FastifyRequest<{
+  Params: {
+    id: String;
+  };
+}>;
+const deleteRegion = async (req: DeleteRegionReq, reply: FastifyReply) => {
   try {
+    const { id } = req.params;
+    const region = await RegionsModel.findByIdAndDelete(id);
+    if (region) {
+      return reply.status(200).send(
+        response({
+          data: region,
+          isError: false,
+          message: ADMIN_MESSAGES.REGION_DELETED_SUCCESSFULLY,
+        })
+      );
+    } else {
+      return reply.status(400).send(
+        response({
+          isError: true,
+          message: ADMIN_MESSAGES.FAILED_TO_DELETE_REGION,
+        })
+      );
+    }
   } catch (error) {
     console.error(`Something went wrong in deleteRegion due to `, error);
     return reply.status(500).send(
