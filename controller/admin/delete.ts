@@ -7,6 +7,7 @@ import {
   INTERNAL_SERVER_ERROR,
   MESSAGE_MESSAGES,
   SHARE_MESSAGES,
+  USER_MESSAGES,
 } from "../../constant/messages";
 import { FavouriteModel } from "../../model/Favourite";
 import { ShareModel } from "../../model/Share";
@@ -14,6 +15,8 @@ import { ChatModel } from "../../model/Chat";
 import { MessageModel } from "../../model/Message";
 import { LawModel } from "../../model/Law";
 import { RegionsModel } from "../../model/Regions";
+import { UserModel } from "../../model/User";
+import { DeletedUserModel } from "../../model/DeletedUser";
 
 type DeleteFavouriteReq = FastifyRequest<{
   Params: {
@@ -234,6 +237,81 @@ const deleteRegion = async (req: DeleteRegionReq, reply: FastifyReply) => {
   }
 };
 
+type DeleteUserReq = FastifyRequest<{
+  Params: {
+    id: String;
+  };
+}>;
+const deleteUser = async (req: DeleteUserReq, reply: FastifyReply) => {
+  try {
+    const { id } = req.params;
+    const user = await UserModel.findByIdAndDelete(id);
+    if (user) {
+      return reply.status(200).send(
+        response({
+          data: user,
+          isError: false,
+          message: USER_MESSAGES.USER_DELETED_SUCCESSFULLY,
+        })
+      );
+    } else {
+      return reply.status(400).send(
+        response({
+          isError: true,
+          message: USER_MESSAGES.USER_DELETION_FAILURE,
+        })
+      );
+    }
+  } catch (error) {
+    console.error(`Something went wrong in deleteRegion due to `, error);
+    return reply.status(500).send(
+      response({
+        isError: true,
+        message: INTERNAL_SERVER_ERROR,
+      })
+    );
+  }
+};
+
+type DeleteDeletedUserReq = FastifyRequest<{
+  Params: {
+    id: String;
+  };
+}>;
+const deleteDeletedUser = async (
+  req: DeleteDeletedUserReq,
+  reply: FastifyReply
+) => {
+  try {
+    const { id } = req.params;
+    const user = await DeletedUserModel.findByIdAndDelete(id);
+    if (user) {
+      return reply.status(200).send(
+        response({
+          data: user,
+          isError: false,
+          message: ADMIN_MESSAGES.DELETE_DELETED_USER_SUCCESSFULLY,
+        })
+      );
+    } else {
+      return reply.status(400).send(
+        response({
+          isError: true,
+          message: ADMIN_MESSAGES.DELETING_DELETED_USER_FAILED,
+        })
+      );
+    }
+  } catch (error) {
+    console.error(`Something went wrong in deleteDeletedUser due to `, error);
+    return reply.status(500).send(
+      response({
+        isError: true,
+        message: INTERNAL_SERVER_ERROR,
+      })
+    );
+  }
+};
+
 export {
   deleteFavourite,
   deleteShare,
@@ -241,4 +319,6 @@ export {
   deleteMessage,
   deleteLaw,
   deleteRegion,
+  deleteUser,
+  deleteDeletedUser,
 };

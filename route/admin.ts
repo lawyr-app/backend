@@ -28,6 +28,8 @@ import {
   deleteLaw,
   deleteChat,
   deleteShare,
+  deleteUser,
+  deleteDeletedUser,
 } from "../controller/admin/delete";
 
 const adminRoutes: FastifyPluginCallback = (
@@ -63,9 +65,9 @@ const adminRoutes: FastifyPluginCallback = (
     handler: processRegion,
   });
 
-  fastify.register(deleteRoutes, { prefix: "/api/admin/delete" });
-  fastify.register(updateRoutes, { prefix: "/api/admin/update" });
-  fastify.register(getRoutes, { prefix: "/api/admin/get" });
+  fastify.register(deleteRoutes, { prefix: "/delete" });
+  fastify.register(updateRoutes, { prefix: "/update" });
+  fastify.register(getRoutes, { prefix: "/get" });
 
   done();
 };
@@ -106,6 +108,16 @@ const deleteRoutes: FastifyPluginCallback = async (
     method: ["DELETE"],
     url: "/region/:id",
     handler: deleteRegion,
+  });
+  fastify.route({
+    method: ["DELETE"],
+    url: "/user/:id",
+    handler: deleteUser,
+  });
+  fastify.route({
+    method: ["DELETE"],
+    url: "/deleteduser/:id",
+    handler: deleteDeletedUser,
   });
   done();
 };

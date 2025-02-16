@@ -12,7 +12,7 @@ import { DeletedUserModel } from "../../model/DeletedUser";
 import { FavouriteModel } from "../../model/Favourite";
 import { ShareModel } from "../../model/Share";
 import { RegionsModel } from "../../model/Regions";
-import { HydratedDocument, InferSchemaType } from "mongoose";
+import { HydratedDocument } from "mongoose";
 import { LawModel } from "../../model/Law";
 
 type GetUserRequestType = FastifyRequest<{
