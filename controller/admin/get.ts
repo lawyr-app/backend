@@ -3,7 +3,11 @@ import { response } from "../../utils/response";
 import { UserModel } from "../../model/User";
 import {
   ADMIN_MESSAGES,
+  CHAT_MESSAGES,
+  FAVOURITE_MESSAGES,
   INTERNAL_SERVER_ERROR,
+  MESSAGE_MESSAGES,
+  SHARE_MESSAGES,
   USER_MESSAGES,
 } from "../../constant/messages";
 import { MessageModel } from "../../model/Message";
@@ -109,6 +113,37 @@ const getShares = async (req: getSharesReq, reply: FastifyReply) => {
   }
 };
 
+type getShareByIdReq = FastifyRequest<{
+  Params: {
+    id: string;
+  };
+}>;
+const getShareById = async (req: getShareByIdReq, reply: FastifyReply) => {
+  try {
+    const { id } = req.params;
+    const share = await ShareModel.findById(id);
+    if (share) {
+      reply.send(
+        response({
+          isError: false,
+          data: share,
+          message: SHARE_MESSAGES.SHARING_FETCHED_SUCCESSFULLY,
+        })
+      );
+    } else {
+      reply.send(
+        response({
+          isError: true,
+          message: SHARE_MESSAGES.FAILED_TO_FETCH_SHARING,
+        })
+      );
+    }
+  } catch (error) {
+    console.error("Something went wrong in getShareById due to ", error);
+    reply.send(response({ isError: true, message: INTERNAL_SERVER_ERROR }));
+  }
+};
+
 type getFavouritesReq = FastifyRequest<{
   Querystring: {
     skip: number;
@@ -133,6 +168,40 @@ const getFavourites = async (req: getFavouritesReq, reply: FastifyReply) => {
     );
   } catch (error) {
     console.error("Something went wrong in getFavourites due to ", error);
+    reply.send(response({ isError: true, message: INTERNAL_SERVER_ERROR }));
+  }
+};
+
+type getFavouriteByIdReq = FastifyRequest<{
+  Params: {
+    id: string;
+  };
+}>;
+const getFavouriteById = async (
+  req: getFavouriteByIdReq,
+  reply: FastifyReply
+) => {
+  try {
+    const { id } = req.params;
+    const fav = await FavouriteModel.findById(id);
+    if (fav) {
+      reply.send(
+        response({
+          isError: false,
+          data: fav,
+          message: FAVOURITE_MESSAGES.FETCHED_FAVOURITE_SUCCESSFULLY,
+        })
+      );
+    } else {
+      reply.send(
+        response({
+          isError: true,
+          message: FAVOURITE_MESSAGES.FAILED_TO_FETCH_FAVOURITE,
+        })
+      );
+    }
+  } catch (error) {
+    console.error("Something went wrong in getFavouriteById due to ", error);
     reply.send(response({ isError: true, message: INTERNAL_SERVER_ERROR }));
   }
 };
@@ -181,6 +250,40 @@ const getDeletedUsers = async (
   }
 };
 
+type getDeletedUserByIdReq = FastifyRequest<{
+  Params: {
+    id: string;
+  };
+}>;
+const getDeletedUserById = async (
+  req: getDeletedUserByIdReq,
+  reply: FastifyReply
+) => {
+  try {
+    const { id } = req.params;
+    const deletedUser = await DeletedUserModel.findById(id);
+    if (deletedUser) {
+      reply.send(
+        response({
+          isError: false,
+          data: deletedUser,
+          message: ADMIN_MESSAGES.FETCHED_DELETED_USER_SUCCESSFULLY,
+        })
+      );
+    } else {
+      reply.send(
+        response({
+          isError: true,
+          message: ADMIN_MESSAGES.FAILED_TO_FETCH_DELETED_USER_FAILED,
+        })
+      );
+    }
+  } catch (error) {
+    console.error("Something went wrong in getDeletedUserById due to ", error);
+    reply.send(response({ isError: true, message: INTERNAL_SERVER_ERROR }));
+  }
+};
+
 type getChatsReq = FastifyRequest<{
   Querystring: {
     skip: number;
@@ -209,6 +312,37 @@ const getChats = async (req: getChatsReq, reply: FastifyReply) => {
   }
 };
 
+type getChatByIdReq = FastifyRequest<{
+  Params: {
+    id: string;
+  };
+}>;
+const getChatById = async (req: getChatByIdReq, reply: FastifyReply) => {
+  try {
+    const { id } = req.params;
+    const chat = await ChatModel.findById(id);
+    if (chat) {
+      reply.send(
+        response({
+          isError: false,
+          data: chat,
+          message: CHAT_MESSAGES.CHAT_FETCHED_SUCCESSFULLY,
+        })
+      );
+    } else {
+      reply.send(
+        response({
+          isError: true,
+          message: CHAT_MESSAGES.FAILED_TO_FETCH_CHAT,
+        })
+      );
+    }
+  } catch (error) {
+    console.error("Something went wrong in getDeletedUserById due to ", error);
+    reply.send(response({ isError: true, message: INTERNAL_SERVER_ERROR }));
+  }
+};
+
 type getMessagesReq = FastifyRequest<{
   Querystring: {
     skip: number;
@@ -233,6 +367,37 @@ const getMessages = async (req: getMessagesReq, reply: FastifyReply) => {
     );
   } catch (error) {
     console.error("Something went wrong in getMessages due to ", error);
+    reply.send(response({ isError: true, message: INTERNAL_SERVER_ERROR }));
+  }
+};
+
+type getMessageByIdReq = FastifyRequest<{
+  Params: {
+    id: string;
+  };
+}>;
+const getMessageById = async (req: getMessageByIdReq, reply: FastifyReply) => {
+  try {
+    const { id } = req.params;
+    const message = await MessageModel.findById(id);
+    if (message) {
+      reply.send(
+        response({
+          isError: false,
+          data: message,
+          message: MESSAGE_MESSAGES.MESSAGE_FETCHED_SUCCESSFULLY,
+        })
+      );
+    } else {
+      reply.send(
+        response({
+          isError: true,
+          message: MESSAGE_MESSAGES.FAILED_TO_FETCH_MESSAGE,
+        })
+      );
+    }
+  } catch (error) {
+    console.error("Something went wrong in getDeletedUserById due to ", error);
     reply.send(response({ isError: true, message: INTERNAL_SERVER_ERROR }));
   }
 };
@@ -280,7 +445,7 @@ const getRegions = async (req: getRegionsReq, reply: FastifyReply) => {
         response({
           data: regions,
           isError: false,
-          message: ADMIN_MESSAGES.FAULED_TO_FETCH_REGION,
+          message: ADMIN_MESSAGES.FAILED_TO_FETCH_REGION,
         })
       );
     }
@@ -334,7 +499,7 @@ const getSingleRegion = async (
         response({
           data: null,
           isError: false,
-          message: ADMIN_MESSAGES.FAULED_TO_FETCH_REGION,
+          message: ADMIN_MESSAGES.FAILED_TO_FETCH_REGION,
         })
       );
     }
@@ -417,4 +582,9 @@ export {
   getSingleRegion,
   getRegionLaws,
   getLaw,
+  getShareById,
+  getFavouriteById,
+  getDeletedUserById,
+  getChatById,
+  getMessageById
 };

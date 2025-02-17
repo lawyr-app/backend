@@ -23,6 +23,11 @@ import {
   getSingleRegion,
   getLaw,
   getRegionLaws,
+  getShareById,
+  getFavouriteById,
+  getDeletedUserById,
+  getChatById,
+  getMessageById,
 } from "../controller/admin/get";
 import {
   deleteFavourite,
@@ -132,6 +137,11 @@ const getRoutes: FastifyPluginCallback = async (
 ) => {
   fastify.route({
     method: ["GET"],
+    url: "/users",
+    handler: getUsers,
+  });
+  fastify.route({
+    method: ["GET"],
     url: "/user/:userId",
     handler: getUser,
   });
@@ -155,15 +165,16 @@ const getRoutes: FastifyPluginCallback = async (
     url: "/region-laws/:id",
     handler: getRegionLaws,
   });
-  fastify.route({
-    method: ["GET"],
-    url: "/users",
-    handler: getUsers,
-  });
+
   fastify.route({
     method: ["GET"],
     url: "/shares",
     handler: getShares,
+  });
+  fastify.route({
+    method: ["GET"],
+    url: "/share/:id",
+    handler: getShareById,
   });
   fastify.route({
     method: ["GET"],
@@ -172,8 +183,18 @@ const getRoutes: FastifyPluginCallback = async (
   });
   fastify.route({
     method: ["GET"],
+    url: "/favourite/:id",
+    handler: getFavouriteById,
+  });
+  fastify.route({
+    method: ["GET"],
     url: "/deleteusers",
     handler: getDeletedUsers,
+  });
+  fastify.route({
+    method: ["GET"],
+    url: "/deleteuser/:id",
+    handler: getDeletedUserById,
   });
   fastify.route({
     method: ["GET"],
@@ -182,8 +203,18 @@ const getRoutes: FastifyPluginCallback = async (
   });
   fastify.route({
     method: ["GET"],
+    url: "/chat/:id",
+    handler: getChatById,
+  });
+  fastify.route({
+    method: ["GET"],
     url: "/messages",
     handler: getMessages,
+  });
+  fastify.route({
+    method: ["GET"],
+    url: "/message/:id",
+    handler: getMessageById,
   });
 
   done();
