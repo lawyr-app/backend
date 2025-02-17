@@ -20,6 +20,9 @@ import {
   getRegions,
   getShares,
   getUsers,
+  getSingleRegion,
+  getLaw,
+  getRegionLaws,
 } from "../controller/admin/get";
 import {
   deleteFavourite,
@@ -136,6 +139,21 @@ const getRoutes: FastifyPluginCallback = async (
     method: ["GET"],
     url: "/regions",
     handler: getRegions,
+  });
+  fastify.route({
+    method: ["GET"],
+    url: "/region/:id",
+    handler: getSingleRegion,
+  });
+  fastify.route({
+    method: ["GET"],
+    url: "/laws/:id",
+    handler: getLaw,
+  });
+  fastify.route({
+    method: ["GET"],
+    url: "/region-laws/:id",
+    handler: getRegionLaws,
   });
   fastify.route({
     method: ["GET"],

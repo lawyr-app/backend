@@ -275,6 +275,15 @@ const getRegions = async (req: getRegionsReq, reply: FastifyReply) => {
   try {
     const { needProcessStatus } = req.query;
     const regions = await RegionsModel.find();
+    if (!regions) {
+      return reply.send(
+        response({
+          data: regions,
+          isError: false,
+          message: ADMIN_MESSAGES.FAULED_TO_FETCH_REGION,
+        })
+      );
+    }
     if (needProcessStatus) {
       const processed = await getRegionProcessStatus({ regions });
       reply.send(
@@ -299,6 +308,103 @@ const getRegions = async (req: getRegionsReq, reply: FastifyReply) => {
   }
 };
 
+type getSingleRegionReq = FastifyRequest<{
+  Params: {
+    id: string;
+  };
+}>;
+const getSingleRegion = async (
+  req: getSingleRegionReq,
+  reply: FastifyReply
+) => {
+  try {
+    const { id } = req.params;
+    const region = await RegionsModel.findById(id);
+    if (region) {
+      const processed = await getRegionProcessStatus({ regions: [region] });
+      reply.send(
+        response({
+          data: processed[0],
+          isError: false,
+          message: ADMIN_MESSAGES.FETCHED_REGIONS_SUCCESSFULLY,
+        })
+      );
+    } else {
+      return reply.send(
+        response({
+          data: null,
+          isError: false,
+          message: ADMIN_MESSAGES.FAULED_TO_FETCH_REGION,
+        })
+      );
+    }
+  } catch (error) {
+    console.error("getSingleRegion", error);
+    reply.send(response({ isError: true, message: INTERNAL_SERVER_ERROR }));
+  }
+};
+
+type getRegionLawsReq = FastifyRequest<{
+  Params: {
+    id: string;
+  };
+  Querystring: {
+    skip: number;
+    limit: number;
+  };
+}>;
+const getRegionLaws = async (req: getRegionLawsReq, reply: FastifyReply) => {
+  try {
+    const { id } = req.params;
+    const { skip, limit } = req.query;
+    const laws = await LawModel.find({ regionId: id })
+      .skip(+skip)
+      .limit(+limit);
+    reply.send(
+      response({
+        data: laws,
+        isError: false,
+        message: ADMIN_MESSAGES.LAWS_FETCHED_SUCCESSFULLY,
+      })
+    );
+  } catch (error) {
+    console.error("getRegionLaws", error);
+    reply.send(response({ isError: true, message: INTERNAL_SERVER_ERROR }));
+  }
+};
+
+type getLawsReq = FastifyRequest<{
+  Params: {
+    id: string;
+  };
+}>;
+const getLaw = async (req: getLawsReq, reply: FastifyReply) => {
+  try {
+    const { id } = req.params;
+    const law = await LawModel.findById(id);
+    if (law) {
+      reply.send(
+        response({
+          data: law,
+          isError: true,
+          message: ADMIN_MESSAGES.LAW_FETCHED_SUCCESSFULLY,
+        })
+      );
+    } else {
+      reply.send(
+        response({
+          data: null,
+          isError: true,
+          message: ADMIN_MESSAGES.FAILED_TO_FETCH_REGION,
+        })
+      );
+    }
+  } catch (error) {
+    console.error("getLaw", error);
+    reply.send(response({ isError: true, message: INTERNAL_SERVER_ERROR }));
+  }
+};
+
 export {
   getUser,
   getMessages,
@@ -308,4 +414,7 @@ export {
   getShares,
   getUsers,
   getRegions,
+  getSingleRegion,
+  getRegionLaws,
+  getLaw,
 };
