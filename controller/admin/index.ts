@@ -144,45 +144,4 @@ const processRegion = async (req: processRegionReq, reply: FastifyReply) => {
   }
 };
 
-type UpdateUserRequestType = FastifyRequest<{
-  Body: typeof UserModel;
-  Params: {
-    userId: string;
-  };
-}>;
-const updateUser = async (req: UpdateUserRequestType, reply: FastifyReply) => {
-  try {
-    const { userId } = req.params;
-    const user = await UserModel.findById(userId);
-    if (user) {
-      const updatedUser = await UserModel.findByIdAndUpdate(userId, req.body, {
-        new: true,
-      });
-      reply.status(200).send(
-        response({
-          data: updatedUser,
-          isError: false,
-          message: USER_MESSAGES.USER_FETCHED_SUCCESSFULLY,
-        })
-      );
-    } else {
-      reply.status(400).send(
-        response({
-          data: null,
-          isError: true,
-          message: USER_MESSAGES.USER_UPDATING_FAILURE,
-        })
-      );
-    }
-  } catch (error) {
-    console.error(`Something went wrong in updateUser due to `, error);
-    return reply.status(500).send(
-      response({
-        isError: true,
-        message: INTERNAL_SERVER_ERROR,
-      })
-    );
-  }
-};
-
-export { seedRegions, scrapRegionLaws, processLaw, processRegion, updateUser };
+export { seedRegions, scrapRegionLaws, processLaw, processRegion };

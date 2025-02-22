@@ -348,13 +348,15 @@ type getMessagesReq = FastifyRequest<{
     skip: number;
     limit: number;
     search: string;
+    chatId: string;
   };
 }>;
 const getMessages = async (req: getMessagesReq, reply: FastifyReply) => {
   try {
-    const { skip, limit, search } = req.query;
+    const { skip, limit, search, chatId } = req.query;
     const messages = await MessageModel.find({
       ...(search && { question: { $regex: search, $options: "i" } }),
+      chatId,
     })
       .skip(+skip)
       .limit(+limit);
@@ -586,5 +588,5 @@ export {
   getFavouriteById,
   getDeletedUserById,
   getChatById,
-  getMessageById
+  getMessageById,
 };

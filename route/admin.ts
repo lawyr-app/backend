@@ -208,7 +208,7 @@ const getRoutes: FastifyPluginCallback = async (
   });
   fastify.route({
     method: ["GET"],
-    url: "/messages",
+    url: "/messages/:chatId",
     handler: getMessages,
   });
   fastify.route({
@@ -225,6 +225,11 @@ const updateRoutes: FastifyPluginCallback = async (
   options: FastifyPluginOptions,
   done
 ) => {
+  fastify.route({
+    method: ["PUT"],
+    url: "/user/:userId",
+    handler: updateUser,
+  });
   fastify.route({
     method: ["PUT"],
     url: "/user/:userId",
