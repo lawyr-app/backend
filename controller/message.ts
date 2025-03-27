@@ -4,13 +4,8 @@ import { response } from "../utils/response";
 import { UserModel } from "../model/User";
 import { generateEmbeddings } from "../utils/generateEmbedding";
 import { getChatContext, lawPromptTemplate } from "../utils/chatUtils";
-import { ChatGroq } from "@langchain/groq";
 import { StringOutputParser } from "@langchain/core/output_parsers";
-import {
-  GROQ_API_KEY,
-  GEMINI_API_KEY,
-  OPENAI_API_KEY,
-} from "../constant/envvariables";
+import { GEMINI_API_KEY } from "../constant/envvariables";
 import { INTERNAL_SERVER_ERROR } from "../constant/messages";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 
@@ -23,6 +18,7 @@ type GetChatUserMessagesRequestType = FastifyRequest<{
     limit: number;
   };
 }>;
+
 const getChatUserMessages = async (
   req: GetChatUserMessagesRequestType,
   reply: FastifyReply

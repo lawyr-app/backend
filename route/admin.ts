@@ -9,7 +9,6 @@ import {
   processRegion,
   scrapRegionLaws,
   seedRegions,
-  updateUser,
 } from "../controller/admin";
 import {
   getFavourites,
@@ -39,6 +38,7 @@ import {
   deleteUser,
   deleteDeletedUser,
 } from "../controller/admin/delete";
+import { updateUser } from "../controller/admin/update";
 
 const adminRoutes: FastifyPluginCallback = (
   fastify: FastifyInstance,
@@ -230,11 +230,11 @@ const updateRoutes: FastifyPluginCallback = async (
     url: "/user/:userId",
     handler: updateUser,
   });
-  fastify.route({
-    method: ["PUT"],
-    url: "/user/:userId",
-    handler: updateUser,
-  });
+  // fastify.route({
+  //   method: ["PUT"],
+  //   url: "/user/:userId",
+  //   handler: updateUser,
+  // });
 
   done();
 };
