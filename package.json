@@ -37,6 +37,7 @@
     "langchain": "^0.3.2",
     "mongoose": "^8.7.1",
     "pdf-parse": "^1.1.1",
-    "puppeteer": "^23.5.3"
+    "puppeteer": "^23.5.3",
+    "razorpay": "^2.9.6"
   }
 }

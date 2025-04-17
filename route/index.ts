@@ -5,6 +5,8 @@ import messageRoutes from "./message";
 import favouriteRoutes from "./favourite";
 import shareRoutes from "./share";
 import adminRoutes from "./admin";
+import paymentRoutes from "./payment";
+import webhookRoutes from "./webhook";
 
 const registerRoutes = (fastify: FastifyInstance) => {
   fastify.get("/api/", (req, reply) => {
@@ -18,6 +20,8 @@ const registerRoutes = (fastify: FastifyInstance) => {
   fastify.register(favouriteRoutes, { prefix: "/api/favourite" });
   fastify.register(shareRoutes, { prefix: "/api/share" });
   fastify.register(adminRoutes, { prefix: "/api/admin" });
+  fastify.register(paymentRoutes, { prefix: "/api/payment" });
+  fastify.register(webhookRoutes, { prefix: "/api/webhook" });
 };
 
 export default registerRoutes;
