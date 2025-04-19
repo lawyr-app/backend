@@ -4,7 +4,7 @@ import {
   FastifyPluginCallback,
 } from "fastify";
 import { authMiddleware } from "../prehandlers/user";
-import { initiatePayment } from "../controller/payment";
+import { getPayment, getPayments, initiatePayment } from "../controller/payment";
 
 const paymentRoutes: FastifyPluginCallback = (
   fastify: FastifyInstance,
@@ -16,6 +16,18 @@ const paymentRoutes: FastifyPluginCallback = (
     url: "/initiate",
     preHandler: [authMiddleware],
     handler: initiatePayment,
+  });
+  fastify.route({
+    method: ["GET"],
+    url: "/payments",
+    preHandler: [authMiddleware],
+    handler: getPayments,
+  });
+  fastify.route({
+    method: ["GET"],
+    url: "/payment/:id",
+    preHandler: [authMiddleware],
+    handler: getPayment,
   });
 
   done();

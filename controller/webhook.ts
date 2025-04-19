@@ -4,11 +4,11 @@ import { INTERNAL_SERVER_ERROR } from "../constant/messages";
 import crypto from "crypto";
 import { PAYMENT_STATUS, TOKENS } from "../constant/payment";
 import { PaymentModel } from "../model/Payment";
+import { addTokensInTheUserSchema } from "./payment";
 
 const handleRazorpay = async (req: FastifyRequest, reply: FastifyReply) => {
   try {
-    // Verify webhook signature
-    const webhookSecret = "chedi-webhook"; // Consider moving to .env
+    const webhookSecret = "chedi-webhook";
     const shasum = crypto.createHmac("sha256", webhookSecret);
     shasum.update(JSON.stringify(req.body));
     const digest = shasum.digest("hex");
@@ -24,17 +24,22 @@ const handleRazorpay = async (req: FastifyRequest, reply: FastifyReply) => {
       );
     }
 
-    // Webhook signature is valid
-    console.log("Valid webhook request:", req.body);
-
-    const { event, payload } = req.body;
-
+    const { event, payload } = req.body as PaymentEvent;
     if (
       event === "payment_link.paid" ||
       event === "payment_link.cancelled" ||
       event === "payment_link.expired"
     ) {
       const paymentLinkDetails = payload.payment_link.entity;
+      if (!paymentLinkDetails) {
+        return reply.status(400).send(
+          response({
+            data: null,
+            isError: true,
+            message: "NO_PAYMENT_ID",
+          })
+        );
+      }
       const razorPayId = paymentLinkDetails.id;
 
       const status = (() => {
@@ -57,16 +62,6 @@ const handleRazorpay = async (req: FastifyRequest, reply: FastifyReply) => {
 
       let paymentRecord = await PaymentModel.findOne({ razorPayId });
 
-      if (paymentRecord?.status === PAYMENT_STATUS.SUCCESS) {
-        return reply.status(200).send(
-          response({
-            data: null,
-            isError: false,
-            message: "Payment success",
-          })
-        );
-      }
-
       if (!paymentRecord) {
         return reply.status(400).send(
           response({
@@ -77,13 +72,23 @@ const handleRazorpay = async (req: FastifyRequest, reply: FastifyReply) => {
         );
       }
 
+      if (paymentRecord?.status === PAYMENT_STATUS.SUCCESS) {
+        return reply.status(200).send(
+          response({
+            data: null,
+            isError: false,
+            message: "Payment success",
+          })
+        );
+      }
       paymentRecord.status = status;
       await paymentRecord.save();
-
+      addTokensInTheUserSchema({
+        userId: String(paymentRecord.userId),
+        tokens: +paymentRecord.tokens,
+      });
       console.log(`Payment ${status} saved for razorPayId: ${razorPayId}`);
     }
-
-    // Acknowledge webhook
     return reply.status(200).send(
       response({
         data: null,

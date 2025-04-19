@@ -1,6 +1,6 @@
 import { Schema, model } from "mongoose";
 import { MODELS_TYPE } from "../constant/models";
-const { ObjectId } = Schema.Types;
+import { TOKENS } from "../constant/payment";
 
 const userSchema = new Schema(
   {
@@ -29,6 +29,12 @@ const userSchema = new Schema(
       tokenIssuedAt: Number,
       tokenId: String,
       tokenNotValidBefore: Number,
+    },
+    // every time we buy token we will increment over here
+    // and we will decrement when we use it
+    tokensRemaining: {
+      type: Number,
+      default: TOKENS.FREE,
     },
   },
   { timestamps: true }

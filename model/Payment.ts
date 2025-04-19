@@ -33,12 +33,12 @@ const paymentSchema = new Schema(
     status: {
       type: String,
       enum: [
-        PAYMENT_STATUS.EXPIRED,
-        PAYMENT_STATUS.FAILED,
-        PAYMENT_STATUS.EXPIRED,
-        PAYMENT_STATUS.INITIATED,
-        PAYMENT_STATUS.PENDING,
         PAYMENT_STATUS.SUCCESS,
+        PAYMENT_STATUS.FAILED,
+        PAYMENT_STATUS.PENDING,
+        PAYMENT_STATUS.INITIATED,
+        PAYMENT_STATUS.EXPIRED,
+        PAYMENT_STATUS.CANCELLED,
       ],
       default: PAYMENT_STATUS.INITIATED,
     },
