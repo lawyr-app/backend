@@ -36,6 +36,10 @@ const userSchema = new Schema(
       type: Number,
       default: TOKENS.FREE,
     },
+    tokensBought: {
+      type: Number,
+      default: TOKENS.FREE,
+    },
   },
   { timestamps: true }
 );

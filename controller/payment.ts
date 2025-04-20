@@ -28,8 +28,12 @@ const addTokensInTheUserSchema = async ({
     const currentTokens = user.tokensRemaining || 0;
     const newTokens = currentTokens + tokens;
 
+    const currentBoughtTokens = user.tokensBought || 0;
+    const updatedTokensBought = currentBoughtTokens + tokens;
+
     await UserModel.findByIdAndUpdate(userId, {
       tokensRemaining: newTokens,
+      tokensBought: updatedTokensBought,
     });
     console.log(
       `updated the user with userId ${userId} with tokens ${newTokens}`
