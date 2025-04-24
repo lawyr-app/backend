@@ -285,13 +285,13 @@ const signin = async (req: SinginRequestType, reply: FastifyReply) => {
 
 type GetUserRequestType = FastifyRequest<{
   Params: {
-    id: String;
+    userId: String;
   };
 }>;
 const getUser = async (req: GetUserRequestType, reply: FastifyReply) => {
   try {
-    const { id } = req.params;
-    const user = await UserModel.findById(id).select(
+    const { userId } = req.params;
+    const user = await UserModel.findById(userId).select(
       "-isDeleted -googleMetadata"
     );
     if (user) {

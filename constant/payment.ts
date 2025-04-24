@@ -18,9 +18,9 @@ const TOKENS = {
 const PRICE = {
   FREE: 0,
   BASIC: 100,
-  PRO: 500,
-  PREMIUM: 1000,
-  ULTRA: 2000,
+  PRO: 450,
+  PREMIUM: 800,
+  ULTRA: 1400,
 };
 
 const PLAN_TYPE = {

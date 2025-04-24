@@ -20,7 +20,7 @@ const userRoutes: FastifyPluginCallback = (
 ) => {
   fastify.route({
     method: ["GET"],
-    url: "/user/:userId",
+    url: "/:userId",
     preHandler: [authMiddleware],
     handler: getUser,
   });

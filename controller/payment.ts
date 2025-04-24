@@ -165,7 +165,9 @@ const initiatePayment = async (
   }
 };
 
-type getPaymentsReqType = FastifyRequest<{}>;
+type getPaymentsReqType = FastifyRequest<{
+  Querystring: {};
+}>;
 const getPayments = async (req: getPaymentsReqType, reply: FastifyReply) => {
   try {
     const { _id } = req.user;
