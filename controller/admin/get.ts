@@ -451,7 +451,9 @@ const getRegions = async (req: getRegionsReq, reply: FastifyReply) => {
       );
     }
     if (needProcessStatus) {
-      const processed = await getRegionProcessStatus({ regions });
+      const processed = await getRegionProcessStatus({
+        regions: regions as any,
+      });
       reply.send(
         response({
           data: processed,
@@ -487,7 +489,9 @@ const getSingleRegion = async (
     const { id } = req.params;
     const region = await RegionsModel.findById(id);
     if (region) {
-      const processed = await getRegionProcessStatus({ regions: [region] });
+      const processed = await getRegionProcessStatus({
+        regions: [region as any],
+      });
       reply.send(
         response({
           data: processed[0],
