@@ -155,6 +155,7 @@ const processSingleLaw = async ({ lawId }: processSingleLawProps) => {
       });
     }
   } catch (error) {
+    console.error("Somethign went wrong in processSingleLaw due to ", error);
     return response(errorResponse);
   }
 };

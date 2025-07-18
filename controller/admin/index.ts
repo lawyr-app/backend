@@ -118,25 +118,24 @@ const processRegion = async (req: processRegionReq, reply: FastifyReply) => {
     const { regionId } = req.params;
     const laws = await LawModel.find({
       regionId,
-      $or: [
-        { pineconeIds: { $size: 0 } },
-        { pineconeIds: { $exists: false } },
-        { pineconeIds: null },
-        { pineconeIds: undefined },
-      ],
+      pineconeIds: [],
     });
-    console.log("laws", laws);
-    let failedCount = 0;
-    for (const law of laws) {
-      const res = await processSingleLaw({ lawId: String(law._id) });
-      if (res.isError) {
-        failedCount++;
-      }
-    }
+
+    console.log("laws remaining", laws.length);
+
+    const results = await Promise.allSettled(
+      laws.map((law) => processSingleLaw({ lawId: String(law._id) }))
+    );
+
+    const failedCount = results.filter(
+      (res) => res.status === "fulfilled" && res.value.isError
+    ).length;
+
     const message =
       failedCount > 0
         ? `${failedCount} failed. Please try again`
-        : `Successfull`;
+        : `Successful`;
+
     reply.send(response({ isError: false, message }));
   } catch (error) {
     console.error("Something went wrong in processRegion due to ", error);

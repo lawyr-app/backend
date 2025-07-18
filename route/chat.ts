@@ -3,8 +3,14 @@ import {
   FastifyPluginOptions,
   FastifyPluginCallback,
 } from "fastify";
-import { getChatById, getChats, initiateChat, softDeleteChat } from "../controller/chat";
+import {
+  getChatById,
+  getChats,
+  initiateChat,
+  softDeleteChat,
+} from "../controller/chat";
 import { authMiddleware } from "../prehandlers/user";
+import { subscriptionMiddleware } from "../prehandlers/subscription";
 
 const chatRoutes: FastifyPluginCallback = (
   fastify: FastifyInstance,
@@ -14,7 +20,7 @@ const chatRoutes: FastifyPluginCallback = (
   fastify.route({
     method: ["POST"],
     url: "/initiate",
-    preHandler: [authMiddleware],
+    preHandler: [authMiddleware, subscriptionMiddleware],
     handler: initiateChat,
   });
 

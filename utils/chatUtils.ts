@@ -10,24 +10,30 @@ type commonProps = {
 };
 
 const lawPromptTemplate = ChatPromptTemplate.fromTemplate(`
-  **Answer the question based only on the following context like a lawyer:**
-
+  **Answer the question strictly based on the provided Indian legal context:**
+  
   {context}
-
+  
   **Question:** {question}
-
+  
   ---
-
-  **Answer:**
-
-  - Provide a comprehensive response that includes all relevant details available in the context.
-  - Cite specific information from the legal documents where possible.
-  - If the answer cannot be found in the context, respond with:
-    *"I cannot find information about this in the provided legal documents."*
-  - Format the response in **Markdown**.
-  - Use **bold text** for headers or key points.
-  - Separate paragraphs with a blank line for better readability.
-  - Ensure no relevant information from the context is omitted in the response.
+  
+  **Answer Guidelines:**
+  
+  - Respond as an Indian legal assistant or lawyer would, using formal legal tone.
+  - Your answer must rely only on the information provided in the context above.
+  - Cite specific clauses, sections, or references where applicable.
+  - If the answer is not available in the context, respond with:
+  
+    *"The answer to this question is not available in the provided legal documents. However, based on general Indian legal understanding, here is a relevant interpretation:"*
+  
+    Then proceed with a thoughtful LLM-generated response rooted in Indian law, clearly separated from the factual context.
+  
+  - Format your answer in **Markdown**.
+  - Use **bold** for key legal terms, headings, or points.
+  - Separate each paragraph with a blank line for readability.
+  - Ensure **no important detail from the context is missed**.
+  
   ---
   `);
 
@@ -53,11 +59,17 @@ const getLawIdsFromPineCone = async ({
         namespace: ns,
         embeddings: questionEmbedding,
       });
-      const arrayResponse = queryResponse?.matches;
-      combinedResults = [...combinedResults, ...arrayResponse];
+      if (
+        queryResponse &&
+        typeof queryResponse === "object" &&
+        "matches" in queryResponse
+      ) {
+        const arrayResponse = queryResponse?.matches;
+        combinedResults = [...combinedResults, ...arrayResponse];
+      }
     }
     console.log("combinedResults", combinedResults);
-    const onlyLawIds = combinedResults.map((m) => m.metadata.lawId);
+    const onlyLawIds = combinedResults.map((m: any) => m.metadata.lawId);
     const uniqueLawIds = [...new Set(onlyLawIds)];
     return {
       isError: false,

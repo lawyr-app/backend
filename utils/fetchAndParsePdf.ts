@@ -27,7 +27,10 @@ const fetchAndParsePDF = async ({
     // console.log("data", data);
     return data.text;
   } catch (error) {
-    console.error(`Something went wrong in fetchAndParsePDF due to `, error);
+    console.error(
+      `Something went wrong in fetchAndParsePDF in this url -> `,
+      url
+    );
     return "";
   }
 };

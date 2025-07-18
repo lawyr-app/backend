@@ -9,6 +9,7 @@ import {
   getMessage,
   startMessage,
 } from "../controller/message";
+import { subscriptionMiddleware } from "../prehandlers/subscription";
 
 const messageRoutes: FastifyPluginCallback = (
   fastify: FastifyInstance,
@@ -18,7 +19,7 @@ const messageRoutes: FastifyPluginCallback = (
   fastify.route({
     method: ["POST"],
     url: "/start",
-    preHandler: [authMiddleware],
+    preHandler: [authMiddleware, subscriptionMiddleware],
     handler: startMessage,
   });
 
@@ -28,7 +29,7 @@ const messageRoutes: FastifyPluginCallback = (
     preHandler: [authMiddleware],
     handler: getChatUserMessages,
   });
-  
+
   fastify.route({
     method: ["GET"],
     url: "/get/:id",

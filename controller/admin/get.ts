@@ -413,7 +413,6 @@ const getRegionProcessStatus = async ({
     return await Promise.all(
       regions.map(async (m) => {
         const laws = await LawModel.find({ regionId: m._id });
-        console.log("laws", laws);
 
         const totalLaws = laws.length;
         const processedLaws = laws.filter(

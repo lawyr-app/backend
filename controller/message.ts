@@ -151,7 +151,7 @@ const getMessage = async (req: GetMessageRequestType, reply: FastifyReply) => {
         sendSSE({
           data: null,
           isError: true,
-          message: "NO_CONTEXT",
+          message: "NO_QUESTION",
           stopTheSSE: true,
         });
         return;
@@ -198,6 +198,8 @@ const getMessage = async (req: GetMessageRequestType, reply: FastifyReply) => {
         .stream({ context, question });
 
       const allAnswer = [];
+
+      console.log("answer", answer);
 
       for await (const chunk of answer) {
         allAnswer.push(chunk);
